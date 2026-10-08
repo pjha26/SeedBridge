@@ -1,0 +1,38 @@
+import mongoose from 'mongoose';
+
+const notificationSchema = new mongoose.Schema(
+  {
+    // The user who should receive this notification
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,      // most queries are { user: x, read: false } — index here helps
+    },
+    type: {
+      type: String,
+      required: true,
+      // Examples: 'NEW_INTEREST' | 'INTEREST_ACCEPTED' | 'INTEREST_DECLINED'
+      // Kept as a free string (not enum) so new types can be added without
+      // a migration.
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    // Optional link back to the InterestRequest that triggered this notification.
+    // Lets the client deep-link from a notification to the request detail.
+    relatedRequest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'InterestRequest',
+      default: null,
+    },
+    read: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model('Notification', notificationSchema);
