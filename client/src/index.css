@@ -1,4 +1,86 @@
-/* Tailwind base layers – required for Tailwind to work */
+/* @import must come before @tailwind directives */
+@import './theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Global base ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 32;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+/* ── Utility: layout wrapper ─────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ── Scroll reveal ───────────────────────────────────────────── */
+/*
+  .reveal is added by JS only when IntersectionObserver is available
+  AND prefers-reduced-motion is off. Content is visible by default.
+*/
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.55s var(--ease-out), transform 0.55s var(--ease-out);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Bridge line draw animation ──────────────────────────────── */
+.bridge-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+@keyframes draw-bridge {
+  to { stroke-dashoffset: 0; }
+}
+
+.bridge-path.animate {
+  animation: draw-bridge 1.2s var(--ease-out) 0.3s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bridge-path.animate {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── Focus visible ───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-clay);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
