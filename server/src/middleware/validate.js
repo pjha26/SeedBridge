@@ -1,11 +1,11 @@
-import { ZodError } from 'zod';
-
 /**
- * validate(schema)
- * ----------------
- * Returns an Express middleware that parses req.body through a Zod schema.
+ * validate(schema, source = 'body')
+ * ----------------------------------
+ * Returns an Express middleware that parses req[source] through a Zod schema.
  *
- * On success: replaces req.body with the parsed (and coerced) output,
+ * source: 'body' (default) or 'query'
+ *
+ * On success: replaces req[source] with the parsed (and coerced) output,
  *   so downstream handlers receive clean, typed data.
  *
  * On failure: returns a consistent error shape:
@@ -15,21 +15,22 @@ import { ZodError } from 'zod';
  * which is easy for the client to map to a form field.
  *
  * Usage:
- *   router.post('/register', validate(registerSchema), authController.register)
+ *   router.post('/register', validate(registerSchema), handler)
+ *   router.get('/',          validate(browseSchema, 'query'), handler)
  */
-export function validate(schema) {
+export function validate(schema, source = 'body') {
   return (req, res, next) => {
-    const result = schema.safeParse(req.body);
+    const result = schema.safeParse(req[source]);
 
     if (!result.success) {
       const issues = result.error.errors.map((e) => ({
-        path:    e.path.join('.') || 'body',
+        path:    e.path.join('.') || source,
         message: e.message,
       }));
       return res.status(400).json({ error: 'Validation error', issues });
     }
 
-    req.body = result.data; // replace with parsed output
+    req[source] = result.data; // replace with parsed + coerced output
     next();
   };
 }

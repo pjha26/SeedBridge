@@ -3,8 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import healthRouter from './routes/health.js';
-import authRouter   from './routes/auth.js';
+import healthRouter    from './routes/health.js';
+import authRouter      from './routes/auth.js';
+import listingsRouter  from './routes/listings.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // ── Fail fast if JWT_SECRET is missing or too short ──────────────────────────
@@ -46,8 +47,9 @@ const authLimiter = rateLimit({
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/health', healthRouter);
-app.use('/api/auth',   authLimiter, authRouter);
+app.use('/api/health',   healthRouter);
+app.use('/api/auth',     authLimiter, authRouter);
+app.use('/api/listings', listingsRouter);
 
 // ── Centralised error handler (must be last) ──────────────────────────────────
 app.use(errorHandler);

@@ -1,0 +1,430 @@
+# SeedBridge API — REST Client requests
+# Install the "REST Client" VS Code extension to run these directly.
+# Set the @token_owner and @token_investor variables after logging in.
+#
+# ── MANUAL STEPS ──────────────────────────────────────────────────────────────
+# 1. Run the two login requests below, copy the token values, and paste them
+#    into @token_owner and @token_investor.
+# 2. After creating a listing, copy its _id and paste it into @listing_id.
+# 3. The requests marked "▶ RUN MANUALLY" are the ones where you need to verify
+#    the response yourself (status code, body shape, or absence of fields).
+# ──────────────────────────────────────────────────────────────────────────────
+
+@base = http://localhost:5000/api
+
+# Paste tokens here after the login requests below
+@token_owner    = PASTE_OWNER_TOKEN_HERE
+@token_investor = PASTE_INVESTOR_TOKEN_HERE
+@listing_id     = PASTE_LISTING_ID_HERE
+
+
+###############################################################################
+# AUTH
+###############################################################################
+
+### Register owner ▶ RUN MANUALLY — verify token + user.role = "owner", no passwordHash
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Priya Sharma",
+  "email": "priya@seedbridge.dev",
+  "password": "password123",
+  "role": "owner"
+}
+
+###
+
+### Register investor ▶ RUN MANUALLY — verify user.role = "investor"
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Vikram Patel",
+  "email": "vikram@seedbridge.dev",
+  "password": "password123",
+  "role": "investor"
+}
+
+###
+
+### Login owner — copy token into @token_owner ▶ RUN MANUALLY
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "priya@seedbridge.dev",
+  "password": "password123"
+}
+
+###
+
+### Login investor — copy token into @token_investor ▶ RUN MANUALLY
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "vikram@seedbridge.dev",
+  "password": "password123"
+}
+
+###
+
+### Duplicate email → 409
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Other",
+  "email": "priya@seedbridge.dev",
+  "password": "password123",
+  "role": "owner"
+}
+
+###
+
+### Bad role → 400 Validation error
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Hacker",
+  "email": "hack@test.com",
+  "password": "password123",
+  "role": "admin"
+}
+
+###
+
+### Short password → 400
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Short",
+  "email": "short@test.com",
+  "password": "abc",
+  "role": "investor"
+}
+
+###
+
+### Login wrong password → 401 "Invalid email or password" (same message as wrong email)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "priya@seedbridge.dev",
+  "password": "wrongpassword"
+}
+
+###
+
+### GET /me with token ▶ RUN MANUALLY — verify no passwordHash in response
+GET {{base}}/auth/me
+Authorization: Bearer {{token_owner}}
+
+###
+
+### GET /me without token → 401
+GET {{base}}/auth/me
+
+
+###############################################################################
+# LISTINGS — CREATE
+###############################################################################
+
+### Create listing as owner ▶ RUN MANUALLY — copy _id into @listing_id
+POST {{base}}/listings
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "businessName": "Kettleground Coffee",
+  "industry": "Food & Beverage",
+  "city": "Pune",
+  "state": "Maharashtra",
+  "stage": "revenue",
+  "revenueRange": "10L_1Cr",
+  "fundingGoal": 4000000,
+  "fundingPurpose": "Second roasting unit and direct-to-consumer logistics",
+  "description": "Specialty coffee roastery supplying 60+ cafes and running a subscription business."
+}
+
+###
+
+### Duplicate create → 409 "You already have a listing"
+POST {{base}}/listings
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "businessName": "Second Listing Attempt",
+  "industry": "Food & Beverage",
+  "city": "Mumbai",
+  "state": "Maharashtra",
+  "stage": "idea",
+  "revenueRange": "none",
+  "fundingGoal": 100000,
+  "fundingPurpose": "Testing duplicate block",
+  "description": "Should return 409."
+}
+
+###
+
+### Create as investor → 403 (wrong role)
+POST {{base}}/listings
+Authorization: Bearer {{token_investor}}
+Content-Type: application/json
+
+{
+  "businessName": "Investor Attempt",
+  "industry": "Tech",
+  "city": "Bangalore",
+  "state": "Karnataka",
+  "stage": "idea",
+  "revenueRange": "none",
+  "fundingGoal": 1000000,
+  "fundingPurpose": "Should be blocked",
+  "description": "Investors cannot create listings."
+}
+
+###
+
+### Create without token → 401
+POST {{base}}/listings
+Content-Type: application/json
+
+{
+  "businessName": "No Auth Attempt",
+  "industry": "Tech",
+  "city": "Delhi",
+  "state": "Delhi",
+  "stage": "idea",
+  "revenueRange": "none",
+  "fundingGoal": 500000,
+  "fundingPurpose": "No auth",
+  "description": "Should be blocked."
+}
+
+###
+
+### Attempt to set owner from body → 400 (.strict() rejects unknown keys) ▶ RUN MANUALLY
+POST {{base}}/listings
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "businessName": "Poison Test",
+  "industry": "Tech",
+  "city": "Delhi",
+  "state": "Delhi",
+  "stage": "idea",
+  "revenueRange": "none",
+  "fundingGoal": 1,
+  "fundingPurpose": "Testing owner injection",
+  "description": "owner field below should be rejected by zod .strict()",
+  "owner": "000000000000000000000000"
+}
+
+
+###############################################################################
+# LISTINGS — UPDATE
+###############################################################################
+
+### Update own listing — toggle fundingGoal and isActive ▶ RUN MANUALLY
+PUT {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "fundingGoal": 5000000,
+  "isActive": true
+}
+
+###
+
+### Update someone else's listing → 403 ▶ RUN MANUALLY
+PUT {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_investor}}
+Content-Type: application/json
+
+{
+  "fundingGoal": 1
+}
+
+###
+
+### Attempt to set isSampleData from body → 400 (.strict()) ▶ RUN MANUALLY
+PUT {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "isSampleData": true
+}
+
+
+###############################################################################
+# LISTINGS — BROWSE
+###############################################################################
+
+### Browse all active (default: newest, page 1, limit 12)
+GET {{base}}/listings
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by stage (single)
+GET {{base}}/listings?stage=revenue
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by stage (multiple comma-separated)
+GET {{base}}/listings?stage=revenue,profitable,scaling
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by industry
+GET {{base}}/listings?industry=Food+%26+Beverage
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by city (case-insensitive)
+GET {{base}}/listings?city=pune
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by state
+GET {{base}}/listings?state=Maharashtra
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Filter by funding range
+GET {{base}}/listings?minFunding=1000000&maxFunding=10000000
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Min > max → 400 validation error
+GET {{base}}/listings?minFunding=9000000&maxFunding=1000000
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Text search with relevance sort ▶ RUN MANUALLY — verify score field present, order by relevance
+GET {{base}}/listings?q=coffee&sort=relevance
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Sort relevance without q → 400
+GET {{base}}/listings?sort=relevance
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Sort funding ascending
+GET {{base}}/listings?sort=funding_asc
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Combined filters
+GET {{base}}/listings?stage=revenue&city=pune&sort=funding_desc
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Pagination — page 2 limit 1
+GET {{base}}/listings?page=2&limit=1
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Page beyond the end → empty data array, total unchanged ▶ RUN MANUALLY
+GET {{base}}/listings?page=999
+Authorization: Bearer {{token_owner}}
+
+###
+
+### limit=1000 → 400 "limit cannot exceed 50"
+GET {{base}}/listings?limit=1000
+Authorization: Bearer {{token_owner}}
+
+
+###############################################################################
+# LISTINGS — DETAIL
+###############################################################################
+
+### GET /:id (no token — public) ▶ RUN MANUALLY — verify owner.email is absent/null
+GET {{base}}/listings/{{listing_id}}
+
+###
+
+### GET /:id with token
+GET {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Invalid ObjectId → 404 (not 500 cast error) ▶ RUN MANUALLY
+GET {{base}}/listings/not-an-id
+
+###
+
+### Valid ObjectId format but non-existent → 404
+GET {{base}}/listings/aaaaaaaaaaaaaaaaaaaaaaaa
+
+###
+
+### Inactive listing visible to owner ▶ RUN MANUALLY
+# First deactivate:
+PUT {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{ "isActive": false }
+
+###
+
+### Inactive listing — public gets 404 ▶ RUN MANUALLY
+GET {{base}}/listings/{{listing_id}}
+
+###
+
+### Inactive listing — investor gets 404 ▶ RUN MANUALLY
+GET {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_investor}}
+
+###
+
+### Inactive listing — owner sees it ▶ RUN MANUALLY
+GET {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Reactivate listing
+PUT {{base}}/listings/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{ "isActive": true }
+
+###
+
+### GET /mine — owner's own listing
+GET {{base}}/listings/mine
+Authorization: Bearer {{token_owner}}
+
+###
+
+### GET /mine as investor → 403
+GET {{base}}/listings/mine
+Authorization: Bearer {{token_investor}}

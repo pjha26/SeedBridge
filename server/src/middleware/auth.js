@@ -69,3 +69,38 @@ export function requireRole(role) {
     next();
   };
 }
+
+/**
+ * optionalAuth
+ * ------------
+ * Like verifyToken but NEVER rejects. If a valid token is present it
+ * attaches req.user exactly as verifyToken does. If no token, a bad
+ * token, or a deleted user — req.user stays undefined and the request
+ * continues.
+ *
+ * Used for GET /:id where an inactive listing is visible only to its
+ * owner but the route is otherwise public.
+ */
+export async function optionalAuth(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) return next();
+
+  const token = header.slice(7);
+  let payload;
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return next(); // bad/expired token — treat as unauthenticated
+  }
+
+  const user = await User.findById(payload.userId).lean();
+  if (user) {
+    req.user = {
+      userId: user._id.toString(),
+      role:   user.role,
+      name:   user.name,
+      email:  user.email,
+    };
+  }
+  next();
+}
