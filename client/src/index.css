@@ -1,0 +1,4 @@
+/* Tailwind base layers – required for Tailwind to work */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
