@@ -69,7 +69,7 @@ export const twoSides = {
   },
 };
 
-export type StageName = 'Revenue' | 'Pre-revenue' | 'Profitable' | 'Scaling' | 'Idea';
+export type StageName = 'Early revenue' | 'Pre-revenue' | 'Profitable' | 'Scaling' | 'Idea';
 
 export interface SampleListing {
   label: 'Sample listing';
@@ -89,7 +89,7 @@ export const sampleListings: SampleListing[] = [
     name: 'Kettleground Coffee',
     industry: 'Food & Beverage',
     location: 'Pune, Maharashtra',
-    stage: 'Revenue',
+    stage: 'Early revenue',
     revenueRange: '₹10L – ₹1Cr',
     fundingGoal: '₹40,00,000',
     fundingPurpose: 'Second roasting unit and direct-to-consumer logistics.',
@@ -113,7 +113,7 @@ export const sampleListings: SampleListing[] = [
     name: 'Formly',
     industry: 'Software / SaaS',
     location: 'Remote (India)',
-    stage: 'Revenue',
+    stage: 'Early revenue',
     revenueRange: '₹10L – ₹1Cr',
     fundingGoal: '₹60,00,000',
     fundingPurpose: 'First hire (engineer) and marketing to reach SMB segment.',

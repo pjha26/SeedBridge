@@ -1,147 +1,228 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Hand-drawn-feeling SVG: a seed bottom-left connected by a single
- * arching bridge line to a lantern top-right.
+ * Illustration: seed with sprout (bottom-left) → arching bridge line → lantern (top-right).
  *
- * The bridge path uses pathLength="1" so the dash animation works
- * on a 0–1 scale without measuring the actual path length.
+ * viewBox: 0 0 360 300
+ * Seed centre:    (52, 240)
+ * Arc start:      (52, 210)  — top of seed sprout
+ * Arc end:        (308, 68)  — top of lantern hook
+ * Arc control:    C 80 80, 240 40  — single cubic, rises well above centre
+ *
+ * pathLength="1" on the bridge path keeps dash animation on a 0–1 scale
+ * regardless of actual computed path length.
+ *
+ * Final state (stroke-dashoffset: 0) is set immediately as a default style,
+ * then overridden by the CSS animation class when JS + motion are available.
+ * This means the arc is always visible even if animation never runs.
  */
 export default function SeedBridgeIllustration() {
   const pathRef = useRef<SVGPathElement>(null);
 
   useEffect(() => {
+    const el = pathRef.current;
+    if (!el) return;
+
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      // Show fully drawn immediately
-      pathRef.current?.style.setProperty('stroke-dashoffset', '0');
-      return;
-    }
-    // Trigger the CSS animation by adding the class after mount
+    if (reduced) return; // default style already shows it fully drawn
+
+    // Reset to hidden, then trigger the draw animation next frame
+    el.style.strokeDashoffset = '1';
     const frame = requestAnimationFrame(() => {
-      pathRef.current?.classList.add('animate');
+      el.classList.add('animate');
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
+  const INK = 'var(--color-ink)';
+  const FOREST = 'var(--color-forest)';
+  const CLAY = 'var(--color-clay)';
+  const SEED_Y = 'var(--color-seed)';
+  const RULE = 'var(--color-rule)';
+  const PAPER = 'var(--color-paper)';
+
   return (
     <svg
-      viewBox="0 0 400 320"
+      viewBox="0 0 360 300"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="A seed on the left connected by an arching bridge line to a lantern on the right"
+      aria-label="A sprouting seed on the left, connected by an arching line to a hanging lantern on the right"
       role="img"
       className="w-full h-auto select-none"
+      style={{ maxHeight: '420px' }}
     >
-      {/* ── Seed — bottom left ───────────────────────────────── */}
-      {/* Outer seed shape */}
-      <ellipse
-        cx="68" cy="258"
-        rx="18" ry="26"
-        stroke="var(--color-forest)"
-        strokeWidth="1.8"
-        fill="none"
-        transform="rotate(-20 68 258)"
-      />
-      {/* Inner cotyledon line */}
-      <path
-        d="M 60 244 Q 68 258 60 272"
-        stroke="var(--color-forest)"
-        strokeWidth="1.2"
-        fill="none"
+
+      {/* ── Ground line ──────────────────────────────────────── */}
+      <line
+        x1="20" y1="268"
+        x2="120" y2="268"
+        stroke={RULE}
+        strokeWidth="1"
         strokeLinecap="round"
       />
-      {/* Radicle (tiny root) */}
+
+      {/* ── Seed body (teardrop: pointed top, rounded bottom) ── */}
+      {/*
+        Drawn as a single path so it reads as one shape.
+        Seed sits with its base at y≈260, tip at y≈220.
+      */}
       <path
-        d="M 72 278 Q 78 290 74 298"
-        stroke="var(--color-forest)"
+        d="M 52 220 C 38 230, 34 248, 42 258 Q 52 268 62 258 C 70 248 66 230 52 220 Z"
+        stroke={FOREST}
+        strokeWidth="1.8"
+        fill="none"
+        strokeLinejoin="round"
+      />
+
+      {/* Seed centre crease */}
+      <path
+        d="M 52 222 Q 48 242 52 260"
+        stroke={FOREST}
+        strokeWidth="1"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+
+      {/* ── Sprout (two small leaves + stem rising from seed tip) */}
+      {/* Stem */}
+      <line
+        x1="52" y1="220"
+        x2="52" y2="200"
+        stroke={FOREST}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      {/* Left leaf */}
+      <path
+        d="M 52 210 Q 38 204 36 196 Q 44 196 52 206"
+        stroke={FOREST}
         strokeWidth="1.4"
         fill="none"
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Right leaf */}
+      <path
+        d="M 52 207 Q 66 200 70 192 Q 62 194 52 204"
+        stroke={FOREST}
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
 
       {/* ── Bridge arc ───────────────────────────────────────── */}
       {/*
-        Single cubic bezier from seed to lantern.
-        pathLength="1" keeps the dash animation on a 0–1 scale.
+        Starts at sprout tip (52, 198), arches to lantern hook (308, 72).
+        Control points lift the curve well above centre so it reads clearly.
+        stroke-dashoffset:0 by default → always visible.
+        The animate class overrides this with the keyframe animation.
       */}
       <path
         ref={pathRef}
-        d="M 78 252 C 140 120, 260 60, 340 72"
-        stroke="var(--color-clay-light)"
-        strokeWidth="1.6"
+        d="M 52 198 C 90 80, 240 40, 308 72"
+        stroke={CLAY}
+        strokeWidth="2"
         strokeLinecap="round"
         fill="none"
         pathLength="1"
         className="bridge-path"
-        style={{ '--color-clay-light': 'var(--color-clay-light)' } as React.CSSProperties}
+        style={{ strokeDashoffset: 0 }}
       />
 
-      {/* ── Small tick marks along the arc (bridge stops) ────── */}
-      {[
-        { x1: 148, y1: 165, x2: 144, y2: 158 },
-        { x1: 220, y1: 110, x2: 216, y2: 103 },
-        { x1: 292, y1: 82,  x2: 288, y2: 75  },
-      ].map((tick, i) => (
-        <line
-          key={i}
-          x1={tick.x1} y1={tick.y1}
-          x2={tick.x2} y2={tick.y2}
-          stroke="var(--color-seed)"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      ))}
+      {/* ── Lantern ───────────────────────────────────────────── */}
+      {/*
+        Hook chain: a short vertical line + small arc, ending at the cap.
+        Cap: a trapezoid-ish shape (wider at bottom).
+        Body: rectangular cage with vertical bars.
+        Base: a small tapered bottom.
+        The whole lantern sits centred on x=308, top at y≈72.
+      */}
 
-      {/* ── Lantern — top right ──────────────────────────────── */}
-      {/* Hook */}
+      {/* Chain / hook loop */}
       <path
-        d="M 340 72 Q 343 62 340 56"
-        stroke="var(--color-forest)"
+        d="M 308 72 L 308 58"
+        stroke={INK}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 304 58 Q 308 52 312 58"
+        stroke={INK}
         strokeWidth="1.4"
         fill="none"
         strokeLinecap="round"
       />
-      {/* Body */}
-      <rect
-        x="330" y="56"
-        width="20" height="28"
-        rx="3"
-        stroke="var(--color-forest)"
+
+      {/* Cap (wider than body, sits on top) */}
+      <path
+        d="M 296 72 Q 300 68 308 67 Q 316 68 320 72"
+        stroke={INK}
         strokeWidth="1.6"
         fill="none"
+        strokeLinecap="round"
       />
-      {/* Cross-bar top */}
+      {/* Cap top-edge crossbar */}
       <line
-        x1="330" y1="62"
-        x2="350" y2="62"
-        stroke="var(--color-forest)"
-        strokeWidth="1.2"
-      />
-      {/* Glow suggestion — small seed-yellow circle */}
-      <circle
-        cx="340" cy="72"
-        r="5"
-        fill="var(--color-seed)"
-        opacity="0.45"
-      />
-      {/* Base */}
-      <path
-        d="M 333 84 Q 340 92 347 84"
-        stroke="var(--color-forest)"
+        x1="297" y1="72"
+        x2="319" y2="72"
+        stroke={INK}
         strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+
+      {/* Body frame */}
+      <rect
+        x="299" y="72"
+        width="18" height="32"
+        stroke={INK}
+        strokeWidth="1.6"
+        fill="none"
+        rx="1"
+      />
+
+      {/* Vertical bars inside body (give it the cage feel) */}
+      <line x1="305" y1="72" x2="305" y2="104" stroke={INK} strokeWidth="1" opacity="0.55" />
+      <line x1="311" y1="72" x2="311" y2="104" stroke={INK} strokeWidth="1" opacity="0.55" />
+
+      {/* Mid crossbar */}
+      <line
+        x1="299" y1="88"
+        x2="317" y2="88"
+        stroke={INK}
+        strokeWidth="1"
+        opacity="0.55"
+      />
+
+      {/* Flame / light inside — small pointed oval */}
+      <ellipse
+        cx="308" cy="84"
+        rx="4" ry="6"
+        fill={SEED_Y}
+        opacity="0.5"
+      />
+      <path
+        d="M 308 78 L 308 74"
+        stroke={SEED_Y}
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        opacity="0.7"
+      />
+
+      {/* Base — tapered cap mirroring the top */}
+      <path
+        d="M 299 104 Q 300 110 308 112 Q 316 110 317 104"
+        stroke={INK}
+        strokeWidth="1.6"
         fill="none"
         strokeLinecap="round"
       />
 
-      {/* ── Ground line under seed ───────────────────────────── */}
-      <line
-        x1="42" y1="294"
-        x2="100" y2="294"
-        stroke="var(--color-rule)"
-        strokeWidth="1"
-        strokeLinecap="round"
-      />
+      {/* ── Small dots where arc meets lantern & seed ────────── */}
+      <circle cx="308" cy="72" r="3.5" fill={PAPER} stroke={CLAY} strokeWidth="1.8" />
+      <circle cx="52"  cy="198" r="3.5" fill={PAPER} stroke={CLAY} strokeWidth="1.8" />
+
     </svg>
   );
 }
