@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { NOTIFICATION_TYPE_VALUES } from '../config/constants.js';
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -12,9 +13,9 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      // Examples: 'NEW_INTEREST' | 'INTEREST_ACCEPTED' | 'INTEREST_DECLINED'
-      // Kept as a free string (not enum) so new types can be added without
-      // a migration.
+      // Values are defined in constants.js NOTIFICATION_TYPE_VALUES.
+      // Add new types there; this enum stays in sync automatically.
+      enum: NOTIFICATION_TYPE_VALUES,
     },
     message: {
       type: String,

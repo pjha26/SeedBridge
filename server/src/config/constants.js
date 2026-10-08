@@ -49,5 +49,17 @@ export const REVENUE_RANGE_LABELS = {
 // ── Interest request status ───────────────────────────────────────────────────
 export const INTEREST_STATUS_VALUES = ['pending', 'accepted', 'declined'];
 
+// ── Notification types ────────────────────────────────────────────────────────
+// Add new values here when new notification events are introduced.
+// Used as a Mongoose enum and in Zod schemas so the type can never be mistyped.
+export const NOTIFICATION_TYPES = {
+  INTEREST_RECEIVED: 'interest_received',   // owner receives when investor sends
+  INTEREST_ACCEPTED: 'interest_accepted',   // investor receives when owner accepts
+  INTEREST_DECLINED: 'interest_declined',   // investor receives when owner declines
+};
+
+// Array form for Mongoose enum and Zod .enum()
+export const NOTIFICATION_TYPE_VALUES = Object.values(NOTIFICATION_TYPES);
+
 // ── User roles ────────────────────────────────────────────────────────────────
 export const ROLE_VALUES = ['owner', 'investor'];
