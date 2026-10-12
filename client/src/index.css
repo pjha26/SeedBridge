@@ -1,9 +1,11 @@
 /* @import must come before @tailwind directives */
 @import './theme.css';
 
+/* stylelint-disable */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable */
 
 /* ── Global base ─────────────────────────────────────────────── */
 *, *::before, *::after {
