@@ -21,15 +21,17 @@ export async function saveListingController(req, res, next) {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    // Upsert with rawResult so we can detect first-save vs duplicate
-    const result = await SavedListing.findOneAndUpdate(
+    // Upsert — saving twice is idempotent. We use updateOne with upsert
+    // so we never get a duplicate-key error. setDefaultsOnInsert ensures
+    // the timestamps schema default fires on the first insert.
+    const result = await SavedListing.updateOne(
       { investor: req.user.userId, listing: listingId },
-      {},
-      { upsert: true, new: true, rawResult: true, setDefaultsOnInsert: true }
+      { $setOnInsert: { investor: req.user.userId, listing: listingId } },
+      { upsert: true }
     );
 
-    const wasNew = !result.lastErrorObject.updatedExisting;
-    return res.status(wasNew ? 201 : 200).json({ savedListing: result.value });
+    const wasNew = result.upsertedCount === 1;
+    return res.status(wasNew ? 201 : 200).json({ message: wasNew ? 'Saved' : 'Already saved' });
   } catch (err) {
     next(err);
   }
