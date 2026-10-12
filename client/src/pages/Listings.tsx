@@ -23,12 +23,11 @@ export default function Listings() {
   const [data, setData] = useState<Listing[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
-  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
-  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [debounceTimeout, setDebounceTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
 
   // Read all filters from URL
@@ -111,7 +110,6 @@ export default function Listings() {
 
       setData(response.data);
       setPage(response.page);
-      setTotal(response.total);
       setTotalPages(response.totalPages);
       const initialSaved: Record<string, boolean> = {};
       response.data.forEach((l) => { initialSaved[l._id] = l.savedByMe ?? false; });

@@ -35,6 +35,7 @@ export interface Listing {
   owner: ListingOwner;
   savedByMe?: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface BrowseResponse {
