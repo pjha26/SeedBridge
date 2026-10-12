@@ -20,6 +20,7 @@ const notificationSchema = new mongoose.Schema(
     message: {
       type: String,
       required: true,
+      maxlength: 300,
     },
     // Optional link back to the InterestRequest that triggered this notification.
     // Lets the client deep-link from a notification to the request detail.
@@ -35,5 +36,7 @@ const notificationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+notificationSchema.index({ user: 1, read: 1, createdAt: -1 }, { name: 'user_read_date' });
 
 export default mongoose.model('Notification', notificationSchema);

@@ -2,11 +2,12 @@ import 'dotenv/config';
 import http from 'http';
 import app from './app.js';
 import { connectDB } from './config/db.js';
+import { initSocket } from './socket.js';
 
 const PORT = process.env.PORT || 5000;
 
-// Create raw HTTP server so we can attach Socket.io later (Step 5)
 const server = http.createServer(app);
+initSocket(server);
 
 connectDB().then(() => {
   server.listen(PORT, () => {
@@ -14,4 +15,3 @@ connectDB().then(() => {
   });
 });
 
-export { server };

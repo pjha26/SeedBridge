@@ -574,3 +574,37 @@ Content-Type: application/json
 {
   "status": "declined"
 }
+
+
+###############################################################################
+# NOTIFICATIONS
+###############################################################################
+
+@notification_id = PASTE_NOTIFICATION_ID_HERE
+
+### GET /api/notifications — own notifications (paginated + unreadCount)
+GET {{base}}/notifications
+Authorization: Bearer {{token_investor}}
+
+###
+
+### GET /api/notifications — owner's notifications
+GET {{base}}/notifications
+Authorization: Bearer {{token_owner}}
+
+###
+
+### PATCH /api/notifications/:id/read — mark one as read
+PATCH {{base}}/notifications/{{notification_id}}/read
+Authorization: Bearer {{token_investor}}
+
+###
+
+### PATCH /api/notifications/read-all — mark all as read
+PATCH {{base}}/notifications/read-all
+Authorization: Bearer {{token_investor}}
+
+###
+
+### GET without token ? 401
+GET {{base}}/notifications

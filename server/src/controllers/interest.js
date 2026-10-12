@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import InterestRequest from '../models/InterestRequest.js';
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
+import { NOTIFICATION_TYPES } from '../config/constants.js';
+import { emitToUser } from '../socket.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +41,14 @@ export async function createInterest(req, res, next) {
       owner: listing.owner,
       message: message || '',
     });
+
+    const notif = await Notification.create({
+      user: listing.owner,
+      type: NOTIFICATION_TYPES.INTEREST_RECEIVED,
+      message: `${req.user.name} expressed interest in ${listing.businessName}`,
+      relatedRequest: interestRequest._id,
+    });
+    emitToUser(listing.owner, 'notification', notif);
 
     return res.status(201).json({ interestRequest });
   } catch (err) {
@@ -148,6 +159,18 @@ export async function patchInterestStatus(req, res, next) {
 
     interestRequest.status = req.body.status;
     await interestRequest.save();
+
+    const relatedListing = await Listing.findById(interestRequest.listing).select('businessName').lean();
+    const notifType = interestRequest.status === 'accepted'
+      ? NOTIFICATION_TYPES.INTEREST_ACCEPTED
+      : NOTIFICATION_TYPES.INTEREST_DECLINED;
+    const notif = await Notification.create({
+      user: interestRequest.investor,
+      type: notifType,
+      message: `Your interest in ${relatedListing?.businessName ?? 'a listing'} was ${interestRequest.status}`,
+      relatedRequest: interestRequest._id,
+    });
+    emitToUser(interestRequest.investor, 'notification', notif);
 
     return res.json({ interestRequest });
   } catch (err) {
