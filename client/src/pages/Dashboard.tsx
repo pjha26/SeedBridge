@@ -11,9 +11,11 @@ import {
   STAGE_LABELS,
   REVENUE_RANGE_LABELS,
   formatINR,
+  INTEREST_STATUS_LABELS,
+  interestStatusStyle,
   type StageKey,
 } from '../lib/constants';
-import type { Listing, BrowseResponse, ApiError } from '../lib/types';
+import type { Listing, BrowseResponse, ApiError, InterestRequest, InterestRequestPage } from '../lib/types';
 import type { RevenueRangeKey } from '../lib/constants';
 
 // ── Shared local types ────────────────────────────────────────────────────────
@@ -463,6 +465,48 @@ function OwnerDashboard({
     }
   }
 
+  const [receivedData, setReceivedData]   = useState<InterestRequest[]>([]);
+  const [receivedLoading, setReceivedLoading] = useState(false);
+  const [receivedError, setReceivedError] = useState<string | null>(null);
+  const [receivedRetry, setReceivedRetry] = useState(0);
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [actionError, setActionError]     = useState<Record<string, string>>({});
+
+  const fetchReceived = useCallback(async () => {
+    setReceivedLoading(true);
+    setReceivedError(null);
+    try {
+      const res = await api.get<InterestRequestPage>('/api/interest/received', { auth: true });
+      setReceivedData(res.data);
+    } catch (err: any) {
+      setReceivedError(err.message || 'Failed to load interest requests');
+    } finally {
+      setReceivedLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'interest') fetchReceived();
+  }, [activeTab, fetchReceived, receivedRetry]);
+
+  async function handleInterestAction(id: string, status: 'accepted' | 'declined') {
+    setActionLoading((prev) => ({ ...prev, [id]: true }));
+    setActionError((prev) => ({ ...prev, [id]: '' }));
+    const prevData = receivedData;
+    // Optimistic update
+    setReceivedData((prev) =>
+      prev.map((r) => r._id === id ? { ...r, status } : r)
+    );
+    try {
+      await api.patch(`/api/interest/${id}`, { status });
+    } catch (err: any) {
+      setReceivedData(prevData); // rollback
+      setActionError((prev) => ({ ...prev, [id]: err.message || 'Action failed' }));
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
   const statusText =
     !listing
       ? 'No listing yet'
@@ -853,23 +897,98 @@ function OwnerDashboard({
             </>
           )}
 
-          {/* Tab: interest (placeholder) */}
+          {/* Tab: interest */}
           {activeTab === 'interest' && (
-            <div className="py-16 text-center">
-              <h2
-                className="text-xl font-bold mb-4"
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  color: 'var(--color-ink)',
-                }}
-              >
-                Interest requests
-              </h2>
-              <p
-                style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
-              >
-                When investors express interest in your listing, they'll appear here.
-              </p>
+            <div>
+              {receivedLoading && (
+                <div style={{maxWidth: '640px'}}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="skeleton mb-4" style={{height: '100px', background: 'var(--color-rule)'}} />
+                  ))}
+                </div>
+              )}
+              {receivedError && (
+                <div className="text-center py-16">
+                  <p className="mb-4" style={{color: 'var(--color-ink)', fontFamily: 'var(--font-sans)'}}>
+                    {receivedError}
+                  </p>
+                  <button
+                    onClick={() => setReceivedRetry((k) => k + 1)}
+                    className="px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85"
+                    style={{backgroundColor: 'var(--color-clay)', color: 'var(--color-white)', fontFamily: 'var(--font-sans)', cursor: 'pointer', border: 'none'}}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+              {!receivedLoading && !receivedError && receivedData.length === 0 && (
+                <div className="text-center py-16">
+                  <p style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)'}}>
+                    No investors have expressed interest yet.
+                  </p>
+                </div>
+              )}
+              {!receivedLoading && !receivedError && receivedData.length > 0 && (
+                <div style={{maxWidth: '640px', display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                  {receivedData.map((req) => (
+                    <div key={req._id} className="border p-5" style={{borderColor: 'var(--color-rule)', background: 'var(--color-paper)'}}>
+                      <div className="flex items-start justify-between mb-2" style={{gap: '12px'}}>
+                        <span className="font-bold" style={{fontFamily: 'var(--font-serif)', color: 'var(--color-ink)', fontSize: '1.1rem'}}>
+                          {req.investor.name}
+                        </span>
+                        <span
+                          className="text-sm font-semibold px-3 py-1 shrink-0"
+                          style={interestStatusStyle(req.status) as React.CSSProperties}
+                        >
+                          {INTEREST_STATUS_LABELS[req.status as keyof typeof INTEREST_STATUS_LABELS]}
+                        </span>
+                      </div>
+                      <p className="text-xs mb-2" style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)'}}>
+                        {new Date(req.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {req.listing.businessName ? ` · ${req.listing.businessName}` : ''}
+                      </p>
+                      {req.message && (
+                        <blockquote
+                          className="text-sm mb-3"
+                          style={{
+                            color: 'var(--color-ink)', fontFamily: 'var(--font-sans)',
+                            borderLeft: '3px solid var(--color-rule)', paddingLeft: '12px',
+                            overflow: 'hidden', display: '-webkit-box',
+                            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                          } as React.CSSProperties}
+                        >
+                          {req.message}
+                        </blockquote>
+                      )}
+                      {actionError[req._id] && (
+                        <p className="text-sm mb-2" style={{color: 'var(--color-clay)', fontFamily: 'var(--font-sans)'}}>
+                          {actionError[req._id]}
+                        </p>
+                      )}
+                      {req.status === 'pending' && (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleInterestAction(req._id, 'accepted')}
+                            disabled={actionLoading[req._id]}
+                            className="px-5 py-2 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+                            style={{backgroundColor: 'var(--color-forest)', color: 'var(--color-white)', fontFamily: 'var(--font-sans)', border: 'none', cursor: actionLoading[req._id] ? 'not-allowed' : 'pointer'}}
+                          >
+                            {actionLoading[req._id] ? '…' : 'Accept'}
+                          </button>
+                          <button
+                            onClick={() => handleInterestAction(req._id, 'declined')}
+                            disabled={actionLoading[req._id]}
+                            className="px-5 py-2 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+                            style={{border: '1.5px solid var(--color-clay)', color: 'var(--color-clay)', background: 'var(--color-paper)', fontFamily: 'var(--font-sans)', cursor: actionLoading[req._id] ? 'not-allowed' : 'pointer'}}
+                          >
+                            {actionLoading[req._id] ? '…' : 'Decline'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -928,6 +1047,28 @@ function InvestorDashboard({
       if (removed) setSavedData((prev) => [removed, ...prev]);
     }
   }
+
+  const [requestsData, setRequestsData]   = useState<InterestRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [requestsRetry, setRequestsRetry] = useState(0);
+
+  const fetchRequests = useCallback(async () => {
+    setRequestsLoading(true);
+    setRequestsError(null);
+    try {
+      const res = await api.get<InterestRequestPage>('/api/interest/sent', { auth: true });
+      setRequestsData(res.data);
+    } catch (err: any) {
+      setRequestsError(err.message || 'Failed to load sent requests');
+    } finally {
+      setRequestsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'requests') fetchRequests();
+  }, [activeTab, fetchRequests, requestsRetry]);
 
   return (
     <>
@@ -1026,23 +1167,84 @@ function InvestorDashboard({
             </>
           )}
 
-          {/* Tab: requests (placeholder) */}
+          {/* Tab: requests */}
           {activeTab === 'requests' && (
-            <div className="py-16 text-center">
-              <h2
-                className="text-xl font-bold mb-4"
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  color: 'var(--color-ink)',
-                }}
-              >
-                Sent requests
-              </h2>
-              <p
-                style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
-              >
-                Listings where you've expressed interest will appear here.
-              </p>
+            <div>
+              {requestsLoading && (
+                <div style={{maxWidth: '640px'}}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="skeleton mb-4" style={{height: '100px', background: 'var(--color-rule)'}} />
+                  ))}
+                </div>
+              )}
+              {requestsError && (
+                <div className="text-center py-16">
+                  <p className="mb-4" style={{color: 'var(--color-ink)', fontFamily: 'var(--font-sans)'}}>
+                    {requestsError}
+                  </p>
+                  <button
+                    onClick={() => setRequestsRetry((k) => k + 1)}
+                    className="px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85"
+                    style={{backgroundColor: 'var(--color-clay)', color: 'var(--color-white)', fontFamily: 'var(--font-sans)', cursor: 'pointer', border: 'none'}}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+              {!requestsLoading && !requestsError && requestsData.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="mb-4" style={{color: 'var(--color-ink)', fontFamily: 'var(--font-sans)'}}>
+                    You haven't expressed interest in any listings yet.
+                  </p>
+                  <Link to="/listings" className="text-sm font-semibold" style={{color: 'var(--color-clay)', fontFamily: 'var(--font-sans)'}}>
+                    Browse listings →
+                  </Link>
+                </div>
+              )}
+              {!requestsLoading && !requestsError && requestsData.length > 0 && (
+                <div style={{maxWidth: '640px', display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                  {requestsData.map((req) => (
+                    <div key={req._id} className="border p-5" style={{borderColor: 'var(--color-rule)', background: 'var(--color-paper)'}}>
+                      <div className="flex items-start justify-between mb-2" style={{gap: '12px'}}>
+                        <Link
+                          to={`/listings/${req.listing._id}`}
+                          className="font-bold text-lg hover:opacity-75 transition-opacity"
+                          style={{fontFamily: 'var(--font-serif)', color: 'var(--color-ink)'}}
+                        >
+                          {req.listing.businessName}
+                        </Link>
+                        <span
+                          className="text-sm font-semibold px-3 py-1 shrink-0"
+                          style={interestStatusStyle(req.status) as React.CSSProperties}
+                        >
+                          {INTEREST_STATUS_LABELS[req.status as keyof typeof INTEREST_STATUS_LABELS]}
+                        </span>
+                      </div>
+                      <p className="text-xs mb-2" style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)'}}>
+                        Sent {new Date(req.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                      {req.message && (
+                        <blockquote
+                          className="text-sm mb-2"
+                          style={{
+                            color: 'var(--color-ink)', fontFamily: 'var(--font-sans)',
+                            borderLeft: '3px solid var(--color-rule)', paddingLeft: '12px',
+                            overflow: 'hidden', display: '-webkit-box',
+                            WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                          } as React.CSSProperties}
+                        >
+                          {req.message}
+                        </blockquote>
+                      )}
+                      {req.status === 'accepted' && req.listing.owner?.email && (
+                        <p className="text-sm" style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)'}}>
+                          Contact: <a href={`mailto:${req.listing.owner.email}`} style={{color: 'var(--color-clay)'}}>{req.listing.owner.email}</a>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

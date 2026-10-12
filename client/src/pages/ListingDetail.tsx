@@ -28,6 +28,11 @@ export default function ListingDetail() {
   const [saved, setSaved] = useState<boolean>(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [myInterestStatus, setMyInterestStatus] = useState<'none' | 'pending' | 'accepted' | 'declined'>('none');
+  const [showInterestModal, setShowInterestModal] = useState(false);
+  const [interestMessage, setInterestMessage] = useState('');
+  const [interestLoading, setInterestLoading] = useState(false);
+  const [interestError, setInterestError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -45,6 +50,7 @@ export default function ListingDetail() {
         } as any);
         setListing(data.listing);
         setSaved(data.listing.savedByMe ?? false);
+        setMyInterestStatus(data.listing.myInterestStatus ?? 'none');
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           if (err.status === 404) {
@@ -82,6 +88,29 @@ export default function ListingDetail() {
       setSaveLoading(false);
     }
   }
+
+  async function handleSendInterest() {
+    if (!listing) return;
+    setInterestLoading(true);
+    setInterestError(null);
+    try {
+      await api.post('/api/interest', { listingId: listing._id, message: interestMessage || undefined });
+      setMyInterestStatus('pending');
+      setShowInterestModal(false);
+      setInterestMessage('');
+    } catch (err: any) {
+      setInterestError(err.message || 'Could not send interest request');
+    } finally {
+      setInterestLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!showInterestModal) return;
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setShowInterestModal(false); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showInterestModal]);
 
   if (notFound) {
     return (
@@ -444,20 +473,68 @@ export default function ListingDetail() {
                   </button>
                 )}
                 {/* owners: no save button at all */}
-                <button
-                  disabled
-                  title="Coming soon"
-                  className="px-6 py-3 text-sm font-semibold cursor-not-allowed"
-                  style={{
-                    backgroundColor: 'var(--color-clay)',
-                    color: 'var(--color-white)',
-                    fontFamily: 'var(--font-sans)',
-                    border: 'none',
-                    opacity: 0.5,
-                  }}
-                >
-                  Express interest
-                </button>
+                {/* Interest button — role-dependent */}
+                {!user && (
+                  <Link
+                    to="/login"
+                    state={{from: location}}
+                    className="px-6 py-3 text-sm font-semibold"
+                    style={{border: '1.5px solid var(--color-clay)',
+                      color: 'var(--color-clay)',
+                      fontFamily: 'var(--font-sans)',
+                      background: 'var(--color-paper)',}}
+                  >
+                    Log in to express interest
+                  </Link>
+                )}
+                {user?.role === 'investor' && (
+                  <>
+                    {(!myInterestStatus || myInterestStatus === 'none') && (
+                      <button
+                        onClick={() => setShowInterestModal(true)}
+                        className="px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85"
+                        style={{backgroundColor: 'var(--color-clay)',
+                          color: 'var(--color-white)',
+                          fontFamily: 'var(--font-sans)',
+                          border: 'none',
+                          cursor: 'pointer',}}
+                      >
+                        Express interest
+                      </button>
+                    )}
+                    {myInterestStatus === 'pending' && (
+                      <span
+                        className="px-4 py-2 text-sm font-semibold"
+                        style={{background: '#D4A853',
+                          color: 'var(--color-ink)',
+                          fontFamily: 'var(--font-sans)',}}
+                      >
+                        Pending review
+                      </span>
+                    )}
+                    {myInterestStatus === 'accepted' && (
+                      <span
+                        className="px-4 py-2 text-sm font-semibold"
+                        style={{background: 'var(--color-forest)',
+                          color: 'var(--color-white)',
+                          fontFamily: 'var(--font-sans)',}}
+                      >
+                        Accepted ✓
+                      </span>
+                    )}
+                    {myInterestStatus === 'declined' && (
+                      <span
+                        className="px-4 py-2 text-sm font-semibold"
+                        style={{background: 'var(--color-rule)',
+                          color: 'var(--color-forest)',
+                          fontFamily: 'var(--font-sans)',}}
+                      >
+                        Declined
+                      </span>
+                    )}
+                  </>
+                )}
+                {/* owners: no interest button */}
               </div>
               {saveError && (
                 <p className="text-sm mt-2" style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-sans)' }}>
@@ -467,6 +544,87 @@ export default function ListingDetail() {
             </footer>
 
           </article>
+
+          {showInterestModal && (
+            <div
+              style={{position: 'fixed', inset: 0,
+                background: 'rgba(0,0,0,0.45)',
+                zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',}}
+              onClick={(e) => { if (e.target === e.currentTarget) setShowInterestModal(false); }}
+            >
+              <div
+                style={{background: 'var(--color-paper)',
+                  padding: '32px',
+                  maxWidth: '440px',
+                  width: '100%',}}
+              >
+                <h2
+                  className="text-xl font-bold mb-4"
+                  style={{fontFamily: 'var(--font-serif)', color: 'var(--color-ink)'}}
+                >
+                  Express interest in {listing?.businessName}
+                </h2>
+                <p className="text-sm mb-4" style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)'}}>
+                  Add an optional message to introduce yourself.
+                </p>
+                <textarea
+                  value={interestMessage}
+                  maxLength={500}
+                  rows={4}
+                  onChange={(e) => setInterestMessage(e.target.value)}
+                  placeholder="Your message (optional)"
+                  style={{width: '100%',
+                    padding: '10px 12px',
+                    border: '1.5px solid var(--color-rule)',
+                    background: 'var(--color-paper)',
+                    color: 'var(--color-ink)',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '1rem',
+                    resize: 'vertical',
+                    outline: 'none',
+                    marginBottom: '4px',}}
+                />
+                <p className="text-xs mb-4" style={{color: 'var(--color-forest)', fontFamily: 'var(--font-sans)', textAlign: 'right'}}>
+                  {interestMessage.length} / 500
+                </p>
+                {interestError && (
+                  <p className="text-sm mb-4" style={{color: 'var(--color-clay)', fontFamily: 'var(--font-sans)'}}>
+                    {interestError}
+                  </p>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSendInterest}
+                    disabled={interestLoading}
+                    className="flex-1 px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+                    style={{backgroundColor: 'var(--color-clay)',
+                      color: 'var(--color-white)',
+                      fontFamily: 'var(--font-sans)',
+                      border: 'none',
+                      cursor: interestLoading ? 'not-allowed' : 'pointer',}}
+                  >
+                    {interestLoading ? 'Sending…' : 'Send'}
+                  </button>
+                  <button
+                    onClick={() => { setShowInterestModal(false); setInterestError(null); }}
+                    disabled={interestLoading}
+                    className="flex-1 px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+                    style={{border: '1.5px solid var(--color-clay)',
+                      color: 'var(--color-clay)',
+                      background: 'var(--color-paper)',
+                      fontFamily: 'var(--font-sans)',
+                      cursor: 'pointer',}}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </main>

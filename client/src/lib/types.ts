@@ -34,6 +34,7 @@ export interface Listing {
   isSampleData?: boolean;
   owner: ListingOwner;
   savedByMe?: boolean;
+  myInterestStatus?: 'none' | 'pending' | 'accepted' | 'declined';
   createdAt: string;
   updatedAt?: string;
 }
@@ -50,4 +51,22 @@ export interface BrowseResponse {
 export interface ApiError extends Error {
   status: number;
   issues?: { path: string; message: string }[];
+}
+
+export interface InterestRequest {
+  _id: string;
+  listing: { _id: string; businessName: string; owner: { _id: string; name: string; email?: string } };
+  investor: { _id: string; name: string };
+  owner: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+}
+
+export interface InterestRequestPage {
+  data: InterestRequest[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }

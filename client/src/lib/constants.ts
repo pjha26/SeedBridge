@@ -74,3 +74,20 @@ export function formatINR(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+// ── Interest status ───────────────────────────────────────────────────────────
+
+export type InterestStatusKey = 'none' | 'pending' | 'accepted' | 'declined';
+
+export const INTEREST_STATUS_LABELS: Record<InterestStatusKey, string> = {
+  none:     '',
+  pending:  'Pending',
+  accepted: 'Accepted',
+  declined: 'Declined',
+};
+
+export function interestStatusStyle(status: string): { color: string; fontWeight?: number } {
+  if (status === 'accepted') return { color: 'var(--color-forest)', fontWeight: 600 };
+  if (status === 'declined') return { color: 'var(--color-clay)', fontWeight: 600 };
+  return { color: 'var(--color-ink)' };
+}
