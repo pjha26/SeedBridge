@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Listing from '../models/Listing.js';
+import SavedListing from '../models/SavedListing.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,17 @@ export async function browseListings(req, res, next) {
         .lean(),
     ]);
 
+    // Inject savedByMe for investors
+    if (req.user?.role === 'investor' && data.length > 0) {
+      const listingIds = data.map((l) => l._id);
+      const saved = await SavedListing.find(
+        { investor: req.user.userId, listing: { $in: listingIds } },
+        { listing: 1 }
+      ).lean();
+      const savedSet = new Set(saved.map((s) => s.listing.toString()));
+      data.forEach((l) => { l.savedByMe = savedSet.has(l._id.toString()); });
+    }
+
     return res.json({
       data,
       page,
@@ -228,6 +240,14 @@ export async function getListingById(req, res, next) {
       if (requestorId !== ownerId) {
         return res.status(404).json({ error: 'Listing not found' });
       }
+    }
+
+    // Inject savedByMe for investors
+    if (req.user?.role === 'investor') {
+      const saved = await SavedListing.findOne(
+        { investor: req.user.userId, listing: listing._id }
+      ).lean();
+      listing.savedByMe = !!saved;
     }
 
     return res.json({ listing });

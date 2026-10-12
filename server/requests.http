@@ -428,3 +428,54 @@ Authorization: Bearer {{token_owner}}
 ### GET /mine as investor → 403
 GET {{base}}/listings/mine
 Authorization: Bearer {{token_investor}}
+
+
+###############################################################################
+# SAVED LISTINGS
+###############################################################################
+
+### Save a listing as investor (first time) → 201
+# Replace PASTE_LISTING_ID_HERE with a real listing _id from the seed data
+POST {{base}}/saved/{{listing_id}}
+Authorization: Bearer {{token_investor}}
+
+###
+
+### Save the same listing again (duplicate) → 200 (idempotent)
+POST {{base}}/saved/{{listing_id}}
+Authorization: Bearer {{token_investor}}
+
+###
+
+### Unsave the listing → 200
+DELETE {{base}}/saved/{{listing_id}}
+Authorization: Bearer {{token_investor}}
+
+###
+
+### GET saved listings → should be empty after unsave
+GET {{base}}/saved
+Authorization: Bearer {{token_investor}}
+
+###
+
+### GET saved listings with pagination
+GET {{base}}/saved?page=1&limit=5
+Authorization: Bearer {{token_investor}}
+
+###
+
+### Save as owner → 403 (wrong role)
+POST {{base}}/saved/{{listing_id}}
+Authorization: Bearer {{token_owner}}
+
+###
+
+### Save with no token → 401
+POST {{base}}/saved/{{listing_id}}
+
+###
+
+### Save with invalid ObjectId → 404 (not 500)
+POST {{base}}/saved/not-an-objectid
+Authorization: Bearer {{token_investor}}

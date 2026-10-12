@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import healthRouter    from './routes/health.js';
 import authRouter      from './routes/auth.js';
 import listingsRouter  from './routes/listings.js';
+import savedRouter     from './routes/saved.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // ── Fail fast if JWT_SECRET is missing or too short ──────────────────────────
@@ -50,6 +51,7 @@ const authLimiter = rateLimit({
 app.use('/api/health',   healthRouter);
 app.use('/api/auth',     authLimiter, authRouter);
 app.use('/api/listings', listingsRouter);
+app.use('/api/saved',    savedRouter);
 
 // ── Centralised error handler (must be last) ──────────────────────────────────
 app.use(errorHandler);
