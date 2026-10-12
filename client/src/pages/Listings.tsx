@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import AppNav from '../components/AppNav';
 import {
   STAGE_LABELS,
@@ -18,6 +19,7 @@ import type { BrowseResponse, Listing } from '../lib/types';
  */
 export default function Listings() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const [data, setData] = useState<Listing[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
@@ -27,6 +29,7 @@ export default function Listings() {
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
 
   // Read all filters from URL
   const q = searchParams.get('q') || '';
@@ -66,6 +69,23 @@ export default function Listings() {
     setSearchParams({});
   };
 
+  async function handleBookmarkToggle(e: React.MouseEvent, listingId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    const prev = savedMap[listingId] ?? false;
+    setSavedMap((m) => ({ ...m, [listingId]: !prev }));
+    try {
+      if (prev) {
+        await api.delete(`/api/saved/${listingId}`);
+      } else {
+        await api.post(`/api/saved/${listingId}`, {});
+      }
+    } catch {
+      // rollback
+      setSavedMap((m) => ({ ...m, [listingId]: prev }));
+    }
+  }
+
   // Fetch listings from API
   const fetchListings = useCallback(async (signal: AbortSignal) => {
     setLoading(true);
@@ -93,6 +113,9 @@ export default function Listings() {
       setPage(response.page);
       setTotal(response.total);
       setTotalPages(response.totalPages);
+      const initialSaved: Record<string, boolean> = {};
+      response.data.forEach((l) => { initialSaved[l._id] = l.savedByMe ?? false; });
+      setSavedMap(initialSaved);
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setError(err.message || 'Failed to load listings');
@@ -446,13 +469,44 @@ export default function Listings() {
                   <Link
                     key={listing._id}
                     to={`/listings/${listing._id}`}
-                    className="border p-6 flex flex-col hover:opacity-90 transition-opacity block"
+                    className="border p-6 flex flex-col hover:opacity-90 transition-opacity"
                     style={{
                       borderColor: 'var(--color-rule)',
                       background: 'var(--color-paper)',
                       textDecoration: 'none',
+                      position: 'relative',
                     }}
                   >
+                    {user?.role === 'investor' && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleBookmarkToggle(e, listing._id)}
+                        aria-label={savedMap[listing._id] ? 'Remove from saved' : 'Save listing'}
+                        style={{
+                          position: 'absolute',
+                          top: '12px',
+                          right: '12px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          color: savedMap[listing._id] ? 'var(--color-clay)' : 'var(--color-forest)',
+                          opacity: 0.9,
+                        }}
+                      >
+                        {savedMap[listing._id] ? (
+                          // Filled bookmark SVG
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                          </svg>
+                        ) : (
+                          // Outline bookmark SVG
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                          </svg>
+                        )}
+                      </button>
+                    )}
                     {/* Top row: location + clickable stage badge */}
                     <div
                       className="flex items-baseline justify-between mb-4 pb-3"

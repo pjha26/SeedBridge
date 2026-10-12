@@ -33,6 +33,7 @@ export interface Listing {
   isActive: boolean;
   isSampleData?: boolean;
   owner: ListingOwner;
+  savedByMe?: boolean;
   createdAt: string;
 }
 

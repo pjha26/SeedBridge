@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import AppNav from '../components/AppNav';
 import {
   STAGE_LABELS,
@@ -17,11 +18,16 @@ import type { Listing } from '../lib/types';
  */
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const location = useLocation();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [saved, setSaved] = useState<boolean>(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -38,6 +44,7 @@ export default function ListingDetail() {
           signal: controller.signal,
         } as any);
         setListing(data.listing);
+        setSaved(data.listing.savedByMe ?? false);
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           if (err.status === 404) {
@@ -55,6 +62,26 @@ export default function ListingDetail() {
 
     return () => controller.abort();
   }, [id, retryKey]);
+
+  async function handleSaveToggle() {
+    if (!listing) return;
+    setSaveLoading(true);
+    setSaveError(null);
+    const prev = saved;
+    setSaved(!prev); // optimistic
+    try {
+      if (prev) {
+        await api.delete(`/api/saved/${listing._id}`);
+      } else {
+        await api.post(`/api/saved/${listing._id}`, {});
+      }
+    } catch (err: any) {
+      setSaved(prev); // rollback
+      setSaveError(err.message || 'Could not update saved status');
+    } finally {
+      setSaveLoading(false);
+    }
+  }
 
   if (notFound) {
     return (
@@ -379,23 +406,44 @@ export default function ListingDetail() {
               </section>
             )}
 
-            {/* Action buttons (disabled) */}
+            {/* Action buttons */}
             <footer className="pt-8" style={{ borderTop: '1px solid var(--color-rule)' }}>
               <div className="flex flex-wrap gap-4 mb-3">
-                <button
-                  disabled
-                  title="Coming soon"
-                  className="px-6 py-3 text-sm font-semibold cursor-not-allowed"
-                  style={{
-                    border: '1.5px solid var(--color-clay)',
-                    color: 'var(--color-clay)',
-                    fontFamily: 'var(--font-sans)',
-                    background: 'var(--color-paper)',
-                    opacity: 0.5,
-                  }}
-                >
-                  Save this listing
-                </button>
+                {/* Save button — role-dependent */}
+                {!user && (
+                  <Link
+                    to="/login"
+                    state={{ from: location }}
+                    className="px-6 py-3 text-sm font-semibold"
+                    style={{
+                      border: '1.5px solid var(--color-clay)',
+                      color: 'var(--color-clay)',
+                      fontFamily: 'var(--font-sans)',
+                      background: 'var(--color-paper)',
+                    }}
+                  >
+                    Log in to save
+                  </Link>
+                )}
+                {user?.role === 'investor' && (
+                  <button
+                    onClick={handleSaveToggle}
+                    disabled={saveLoading}
+                    className="px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+                    style={{
+                      border: '1.5px solid var(--color-clay)',
+                      color: saved ? 'var(--color-white)' : 'var(--color-clay)',
+                      backgroundColor: saved ? 'var(--color-clay)' : 'var(--color-paper)',
+                      fontFamily: 'var(--font-sans)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {saveLoading
+                      ? (saved ? 'Removing…' : 'Saving…')
+                      : (saved ? 'Saved ✓' : 'Save this listing')}
+                  </button>
+                )}
+                {/* owners: no save button at all */}
                 <button
                   disabled
                   title="Coming soon"
@@ -411,9 +459,11 @@ export default function ListingDetail() {
                   Express interest
                 </button>
               </div>
-              <p className="text-sm" style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}>
-                These features are coming soon.
-              </p>
+              {saveError && (
+                <p className="text-sm mt-2" style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-sans)' }}>
+                  {saveError}
+                </p>
+              )}
             </footer>
 
           </article>

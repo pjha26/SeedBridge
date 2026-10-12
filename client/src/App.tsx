@@ -6,11 +6,9 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Listings from './pages/Listings';
 import ListingDetail from './pages/ListingDetail';
+import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function DashboardPage() {
-  return <div style={{ padding: '4rem 2rem', fontFamily: 'var(--font-sans)' }}>Dashboard coming soon.</div>;
-}
 
 export default function App() {
   return (
@@ -40,7 +38,7 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
