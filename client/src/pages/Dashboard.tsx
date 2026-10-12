@@ -127,6 +127,7 @@ function TabButton({
         color: active ? 'var(--color-clay)' : 'var(--color-forest)',
         padding: '8px 0',
         marginRight: '24px',
+        marginBottom: '-2px',
         fontFamily: 'var(--font-sans)',
         fontSize: '0.9rem',
         fontWeight: 600,
@@ -501,7 +502,7 @@ function OwnerDashboard({
           </header>
 
           {/* Tab bar */}
-          <nav role="tablist" className="mb-8" style={{ borderBottom: '1px solid var(--color-rule)' }}>
+          <nav role="tablist" className="mb-8 flex" style={{ borderBottom: '2px solid var(--color-rule)' }}>
             <TabButton
               label="My listing"
               active={activeTab === 'listing'}
@@ -949,8 +950,8 @@ function InvestorDashboard({
           {/* Tab bar */}
           <nav
             role="tablist"
-            className="mb-8"
-            style={{ borderBottom: '1px solid var(--color-rule)' }}
+            className="mb-8 flex"
+            style={{ borderBottom: '2px solid var(--color-rule)' }}
           >
             <TabButton
               label="Saved"

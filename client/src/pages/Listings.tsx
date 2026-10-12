@@ -472,39 +472,8 @@ export default function Listings() {
                       borderColor: 'var(--color-rule)',
                       background: 'var(--color-paper)',
                       textDecoration: 'none',
-                      position: 'relative',
                     }}
                   >
-                    {user?.role === 'investor' && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleBookmarkToggle(e, listing._id)}
-                        aria-label={savedMap[listing._id] ? 'Remove from saved' : 'Save listing'}
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '4px',
-                          color: savedMap[listing._id] ? 'var(--color-clay)' : 'var(--color-forest)',
-                          opacity: 0.9,
-                        }}
-                      >
-                        {savedMap[listing._id] ? (
-                          // Filled bookmark SVG
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                          </svg>
-                        ) : (
-                          // Outline bookmark SVG
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-                          </svg>
-                        )}
-                      </button>
-                    )}
                     {/* Top row: location + clickable stage badge */}
                     <div
                       className="flex items-baseline justify-between mb-4 pb-3"
@@ -610,7 +579,7 @@ export default function Listings() {
                       </div>
                     </dl>
 
-                    {/* Footer: owner + view details */}
+                    {/* Footer: owner + view details + bookmark for investors */}
                     <div
                       className="mt-auto pt-3 flex items-center justify-between"
                       style={{ borderTop: '1px solid var(--color-rule)' }}
@@ -621,13 +590,40 @@ export default function Listings() {
                       >
                         by {listing.owner.name}
                       </p>
-                      <span
-                        className="text-xs font-semibold"
-                        style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-sans)' }}
-                        aria-hidden="true"
-                      >
-                        View details →
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-sans)' }}
+                          aria-hidden="true"
+                        >
+                          View details →
+                        </span>
+                        {user?.role === 'investor' && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleBookmarkToggle(e, listing._id)}
+                            aria-label={savedMap[listing._id] ? 'Remove from saved' : 'Save listing'}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '2px',
+                              lineHeight: 0,
+                              color: savedMap[listing._id] ? 'var(--color-clay)' : 'var(--color-forest)',
+                            }}
+                          >
+                            {savedMap[listing._id] ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 ))}

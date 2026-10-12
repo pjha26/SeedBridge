@@ -87,7 +87,7 @@ export default function ListingDetail() {
     return (
       <>
         <AppNav />
-        <main className="py-12">
+        <main className="pt-8 pb-12">
           <div className="container text-center">
             <p className="text-lg mb-4" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-sans)' }}>
               Listing not found.
@@ -119,7 +119,7 @@ export default function ListingDetail() {
         `}</style>
 
         <AppNav />
-        <main className="py-12">
+        <main className="pt-8 pb-12">
           <div className="container max-w-3xl">
             <div className="skeleton mb-6 h-4" style={{ background: 'var(--color-rule)', width: '120px' }} />
             <div className="skeleton mb-4 h-10" style={{ background: 'var(--color-rule)', width: '60%' }} />
@@ -136,7 +136,7 @@ export default function ListingDetail() {
     return (
       <>
         <AppNav />
-        <main className="py-12">
+        <main className="pt-8 pb-12">
           <div className="container text-center">
             <p className="text-lg mb-4" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-sans)' }}>
               {error}
@@ -171,7 +171,7 @@ export default function ListingDetail() {
   return (
     <>
       <AppNav />
-      <main className="py-12">
+      <main className="pt-8 pb-12">
         <div className="container max-w-3xl">
 
           {/* Back link */}
