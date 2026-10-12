@@ -1,13 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { io, type Socket } from 'socket.io-client';
 import { getToken } from '../api/client';
 
-// Minimal Socket interface — matches what this app uses from socket.io-client.
-// The full type is provided once socket.io-client is installed.
-export interface AppSocket {
-  on(event: string, handler: (...args: unknown[]) => void): void;
-  off(event: string, handler: (...args: unknown[]) => void): void;
-  disconnect(): void;
-}
+export type AppSocket = Socket;
 
 interface SocketCtx {
   socket: AppSocket | null;
@@ -40,21 +35,15 @@ export function SocketProvider({
     const token = getToken();
     if (!token) return;
 
-    // Dynamic import so the module is resolved at runtime (after npm install).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    import('socket.io-client' as any).then((mod: any) => {
-      const io = mod.io ?? mod.default;
-      const s: AppSocket = io({ auth: { token }, transports: ['websocket'] });
-      (s as unknown as { on: AppSocket['on'] }).on('connect', () => setConnected(true));
-      (s as unknown as { on: AppSocket['on'] }).on('disconnect', () => setConnected(false));
-      socketRef.current = s;
-    }).catch(() => {
-      // socket.io-client not installed yet; notifications disabled.
-    });
+    const s = io({ auth: { token }, transports: ['websocket'] });
+    s.on('connect', () => setConnected(true));
+    s.on('disconnect', () => setConnected(false));
+    socketRef.current = s;
 
     return () => {
-      socketRef.current?.disconnect();
+      s.disconnect();
       socketRef.current = null;
+      setConnected(false);
     };
   }, [userId]);
 
