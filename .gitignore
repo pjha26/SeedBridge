@@ -18,3 +18,6 @@ npm-debug.log*
 .DS_Store
 .vscode/settings.json
 Thumbs.db
+
+# Workflow agent artifacts (plans, reviews, verdict files)
+.agents/
