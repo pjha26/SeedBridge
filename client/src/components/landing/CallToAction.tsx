@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { cta } from '../../content/landing';
 
 export default function CallToAction() {
@@ -21,8 +22,8 @@ export default function CallToAction() {
             {cta.heading}
           </h2>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a
-              href="/register?role=owner"
+            <Link
+              to="/register?role=owner"
               className="inline-block px-8 py-4 text-base font-semibold transition-opacity hover:opacity-85"
               style={{
                 backgroundColor: 'var(--color-clay)',
@@ -32,9 +33,9 @@ export default function CallToAction() {
               }}
             >
               {cta.ctaOwner}
-            </a>
-            <a
-              href="/register?role=investor"
+            </Link>
+            <Link
+              to="/register?role=investor"
               className="inline-block px-8 py-4 text-base font-semibold transition-opacity hover:opacity-85"
               style={{
                 border: '1.5px solid var(--color-clay)',
@@ -44,7 +45,7 @@ export default function CallToAction() {
               }}
             >
               {cta.ctaInvestor}
-            </a>
+            </Link>
           </div>
         </div>
       </div>

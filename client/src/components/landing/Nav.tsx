@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Nav() {
   return (
     <header
@@ -10,9 +12,8 @@ export default function Nav() {
     >
       <div className="container flex items-center justify-between">
 
-        {/* Wordmark */}
-        <a
-          href="/"
+        <Link
+          to="/"
           className="font-bold text-xl transition-opacity hover:opacity-75"
           style={{
             fontFamily: 'var(--font-serif)',
@@ -22,9 +23,8 @@ export default function Nav() {
           aria-label="SeedBridge home"
         >
           SeedBridge
-        </a>
+        </Link>
 
-        {/* Nav links */}
         <nav aria-label="Primary navigation">
           <ul className="flex items-center gap-6 list-none">
             <li className="hidden sm:block">
@@ -37,17 +37,17 @@ export default function Nav() {
               </a>
             </li>
             <li>
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-sm transition-opacity hover:opacity-70"
                 style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
               >
                 Log in
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className="px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-85"
                 style={{
                   backgroundColor: 'var(--color-clay)',
@@ -56,7 +56,7 @@ export default function Nav() {
                 }}
               >
                 Get started
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { twoSides } from '../../content/landing';
 
 export default function TwoSides() {
@@ -60,8 +61,8 @@ export default function TwoSides() {
                 </li>
               ))}
             </ul>
-            <a
-              href="/register?role=owner"
+            <Link
+              to="/register?role=owner"
               className="inline-block px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85"
               style={{
                 backgroundColor: 'var(--color-clay)',
@@ -71,7 +72,7 @@ export default function TwoSides() {
               }}
             >
               {twoSides.owner.cta}
-            </a>
+            </Link>
           </div>
 
           {/* Vertical rule — hidden on mobile */}
@@ -113,8 +114,8 @@ export default function TwoSides() {
                 </li>
               ))}
             </ul>
-            <a
-              href="/register?role=investor"
+            <Link
+              to="/register?role=investor"
               className="inline-block px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-85"
               style={{
                 border: '1.5px solid var(--color-clay)',
@@ -124,7 +125,7 @@ export default function TwoSides() {
               }}
             >
               {twoSides.investor.cta}
-            </a>
+            </Link>
           </div>
 
         </div>
