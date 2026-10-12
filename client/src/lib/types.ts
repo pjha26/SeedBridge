@@ -11,7 +11,12 @@ export interface User {
 export interface ListingOwner {
   _id: string;
   name: string;
-  // email only present in interest/sent when status === 'accepted'
+  /**
+   * Email is NEVER present on a listing response.
+   * It is only included when an investor fetches their interest requests
+   * and the status is 'accepted' — the server injects it at that point.
+   * Never render this field on a listing card or detail page.
+   */
   email?: string;
 }
 
