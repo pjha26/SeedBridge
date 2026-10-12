@@ -70,3 +70,21 @@ export interface InterestRequestPage {
   total: number;
   totalPages: number;
 }
+
+export interface AppNotification {
+  _id: string;
+  type: 'interest_received' | 'interest_accepted' | 'interest_declined';
+  message: string;
+  relatedRequest?: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationsResponse {
+  data: AppNotification[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  unreadCount: number;
+}

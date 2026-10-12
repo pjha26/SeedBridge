@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import AppNav from '../components/AppNav';
 import FieldError from '../components/FieldError';
 import {
@@ -488,6 +489,14 @@ function OwnerDashboard({
   useEffect(() => {
     if (activeTab === 'interest') fetchReceived();
   }, [activeTab, fetchReceived, receivedRetry]);
+
+  const { socket: ownerSocket } = useSocket();
+  useEffect(() => {
+    if (!ownerSocket) return;
+    const handler = () => { setReceivedRetry((r) => r + 1); };
+    ownerSocket.on('notification', handler);
+    return () => { ownerSocket.off('notification', handler); };
+  }, [ownerSocket]);
 
   async function handleInterestAction(id: string, status: 'accepted' | 'declined') {
     setActionLoading((prev) => ({ ...prev, [id]: true }));
@@ -1069,6 +1078,19 @@ function InvestorDashboard({
   useEffect(() => {
     if (activeTab === 'requests') fetchRequests();
   }, [activeTab, fetchRequests, requestsRetry]);
+
+  const { socket: investorSocket } = useSocket();
+  useEffect(() => {
+    if (!investorSocket) return;
+    const handler = (notif: unknown) => {
+      const n = notif as { type: string };
+      if (n.type === 'interest_accepted' || n.type === 'interest_declined') {
+        setRequestsRetry((r) => r + 1);
+      }
+    };
+    investorSocket.on('notification', handler);
+    return () => { investorSocket.off('notification', handler); };
+  }, [investorSocket]);
 
   return (
     <>

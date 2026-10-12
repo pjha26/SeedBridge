@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
+import NotificationBell from './NotificationBell';
 
 /**
  * Site-wide navigation bar.
@@ -10,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
  */
 export default function AppNav() {
   const { user, logout } = useAuth();
+  const { socket } = useSocket();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -63,6 +66,9 @@ export default function AppNav() {
                   >
                     Dashboard
                   </Link>
+                </li>
+                <li>
+                  <NotificationBell socket={socket} />
                 </li>
                 <li>
                   <span
