@@ -33,11 +33,11 @@ export default function ListingDetail() {
       setError(null);
       setNotFound(false);
       try {
-        const data = await api.get<Listing>(`/api/listings/${id}`, {
+        const data = await api.get<{ listing: Listing }>(`/api/listings/${id}`, {
           auth: true,
           signal: controller.signal,
         } as any);
-        setListing(data);
+        setListing(data.listing);
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           if (err.status === 404) {
