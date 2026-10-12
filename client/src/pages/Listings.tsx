@@ -134,11 +134,11 @@ export default function Listings() {
 
       <AppNav />
 
-      <main className="py-12">
+      <main className="pt-8 pb-12">
         <div className="container">
 
           {/* Page title */}
-          <header className="mb-10">
+          <header className="mb-8">
             <h1
               className="text-3xl md:text-4xl font-bold"
               style={{
@@ -152,10 +152,12 @@ export default function Listings() {
           </header>
 
           {/* Search */}
-          <section className="mb-6">
+          <section className="mb-4">
+            <label htmlFor="search" className="sr-only">Search listings</label>
             <input
+              id="search"
               type="text"
-              placeholder="Search by name, description..."
+              placeholder="Search by name, description…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full px-4 py-3 text-base"
@@ -168,9 +170,10 @@ export default function Listings() {
             />
           </section>
 
-          {/* Filters */}
-          <section className="mb-8 flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[150px]">
+          {/* Filters + Sort — single aligned row, wraps on mobile */}
+          <section aria-label="Filters and sort" className="mb-8 flex flex-wrap gap-3 items-end">
+
+            <div className="flex-1 min-w-[140px]">
               <label
                 htmlFor="industry"
                 className="block text-xs uppercase tracking-wide mb-1"
@@ -192,14 +195,12 @@ export default function Listings() {
               >
                 <option value="">All industries</option>
                 {INDUSTRY_OPTIONS.map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind}
-                  </option>
+                  <option key={ind} value={ind}>{ind}</option>
                 ))}
               </select>
             </div>
 
-            <div className="flex-1 min-w-[150px]">
+            <div className="flex-1 min-w-[140px]">
               <label
                 htmlFor="stage"
                 className="block text-xs uppercase tracking-wide mb-1"
@@ -221,14 +222,12 @@ export default function Listings() {
               >
                 <option value="">All stages</option>
                 {STAGE_OPTIONS.map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
+                  <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
 
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[110px]">
               <label
                 htmlFor="city"
                 className="block text-xs uppercase tracking-wide mb-1"
@@ -239,7 +238,7 @@ export default function Listings() {
               <input
                 id="city"
                 type="text"
-                placeholder="City"
+                placeholder="Any city"
                 value={city}
                 onChange={(e) => updateParams({ city: e.target.value || null, page: null })}
                 className="w-full px-3 py-2 text-sm"
@@ -252,7 +251,7 @@ export default function Listings() {
               />
             </div>
 
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[110px]">
               <label
                 htmlFor="state"
                 className="block text-xs uppercase tracking-wide mb-1"
@@ -263,7 +262,7 @@ export default function Listings() {
               <input
                 id="state"
                 type="text"
-                placeholder="State"
+                placeholder="Any state"
                 value={state}
                 onChange={(e) => updateParams({ state: e.target.value || null, page: null })}
                 className="w-full px-3 py-2 text-sm"
@@ -276,18 +275,19 @@ export default function Listings() {
               />
             </div>
 
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[110px]">
               <label
                 htmlFor="minFunding"
                 className="block text-xs uppercase tracking-wide mb-1"
                 style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
               >
-                Min (₹ lakhs)
+                Min ₹ (lakhs)
               </label>
               <input
                 id="minFunding"
                 type="number"
-                placeholder="Min"
+                min="0"
+                placeholder="0"
                 value={minFunding}
                 onChange={(e) => updateParams({ minFunding: e.target.value || null, page: null })}
                 className="w-full px-3 py-2 text-sm"
@@ -300,18 +300,19 @@ export default function Listings() {
               />
             </div>
 
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[110px]">
               <label
                 htmlFor="maxFunding"
                 className="block text-xs uppercase tracking-wide mb-1"
                 style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
               >
-                Max (₹ lakhs)
+                Max ₹ (lakhs)
               </label>
               <input
                 id="maxFunding"
                 type="number"
-                placeholder="Max"
+                min="0"
+                placeholder="Any"
                 value={maxFunding}
                 onChange={(e) => updateParams({ maxFunding: e.target.value || null, page: null })}
                 className="w-full px-3 py-2 text-sm"
@@ -324,6 +325,7 @@ export default function Listings() {
               />
             </div>
 
+            {/* Sort lives in the same row, pushed right via ml-auto on wider screens */}
             <div className="flex-1 min-w-[150px]">
               <label
                 htmlFor="sort"
@@ -351,20 +353,23 @@ export default function Listings() {
               </select>
             </div>
 
+            {/* Clear filters — self-aligns to bottom with the inputs */}
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-85"
-                style={{
-                  border: '1.5px solid var(--color-clay)',
-                  color: 'var(--color-clay)',
-                  fontFamily: 'var(--font-sans)',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                }}
-              >
-                Clear filters
-              </button>
+              <div className="flex items-end">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-85"
+                  style={{
+                    border: '1.5px solid var(--color-clay)',
+                    color: 'var(--color-clay)',
+                    fontFamily: 'var(--font-sans)',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear filters
+                </button>
+              </div>
             )}
           </section>
 
@@ -441,18 +446,19 @@ export default function Listings() {
                   <Link
                     key={listing._id}
                     to={`/listings/${listing._id}`}
-                    className="border p-6 transition-opacity hover:opacity-80 block"
+                    className="border p-6 flex flex-col hover:opacity-90 transition-opacity block"
                     style={{
                       borderColor: 'var(--color-rule)',
                       background: 'var(--color-paper)',
                       textDecoration: 'none',
                     }}
                   >
-                    {/* Top label */}
+                    {/* Top row: location + clickable stage badge */}
                     <div
-                      className="flex items-baseline justify-between mb-6 pb-3"
+                      className="flex items-baseline justify-between mb-4 pb-3"
                       style={{ borderBottom: '1px solid var(--color-rule)' }}
                     >
+                      {/* Location replaces the old industry label */}
                       <span
                         className="text-xs tracking-widest uppercase"
                         style={{
@@ -461,24 +467,36 @@ export default function Listings() {
                           letterSpacing: '0.14em',
                         }}
                       >
-                        {listing.industry}
+                        {listing.location.city}, {listing.location.state}
                       </span>
-                      <span
-                        className="px-3 py-1 text-xs font-bold uppercase"
+
+                      {/* Stage badge — clicking sets ?stage= filter without navigating to detail */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          updateParams({ stage: listing.stage, page: null });
+                        }}
+                        className="px-3 py-1 text-xs font-bold uppercase transition-opacity hover:opacity-75"
                         style={{
-                          background: 'var(--color-clay)',
-                          color: 'var(--color-white)',
+                          background: '#D4A853',
+                          color: 'var(--color-ink)',
                           fontFamily: 'var(--font-sans)',
                           letterSpacing: '0.06em',
+                          border: 'none',
+                          cursor: 'pointer',
                         }}
+                        title={`Filter by stage: ${STAGE_LABELS[listing.stage as StageKey]}`}
+                        aria-label={`Filter by stage: ${STAGE_LABELS[listing.stage as StageKey]}`}
                       >
                         {STAGE_LABELS[listing.stage as StageKey]}
-                      </span>
+                      </button>
                     </div>
 
-                    {/* Name */}
+                    {/* Business name */}
                     <h3
-                      className="text-2xl font-bold mb-4"
+                      className="text-2xl font-bold mb-3"
                       style={{
                         fontFamily: 'var(--font-serif)',
                         fontVariationSettings: "'opsz' 28",
@@ -488,36 +506,26 @@ export default function Listings() {
                       {listing.businessName}
                     </h3>
 
-                    {/* Grid of details */}
-                    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 mb-5 text-sm">
-                      <div>
-                        <dt
-                          className="text-xs tracking-wide uppercase mb-1"
-                          style={{
-                            color: 'var(--color-forest)',
-                            fontFamily: 'var(--font-sans)',
-                            letterSpacing: '0.08em',
-                          }}
-                        >
-                          Industry
-                        </dt>
-                        <dd style={{ color: 'var(--color-ink)' }}>{listing.industry}</dd>
-                      </div>
-                      <div>
-                        <dt
-                          className="text-xs tracking-wide uppercase mb-1"
-                          style={{
-                            color: 'var(--color-forest)',
-                            fontFamily: 'var(--font-sans)',
-                            letterSpacing: '0.08em',
-                          }}
-                        >
-                          Location
-                        </dt>
-                        <dd style={{ color: 'var(--color-ink)' }}>
-                          {listing.location.city}, {listing.location.state}
-                        </dd>
-                      </div>
+                    {/* 2-line description preview */}
+                    {listing.description && (
+                      <p
+                        className="text-sm mb-4"
+                        style={{
+                          color: 'var(--color-ink)',
+                          fontFamily: 'var(--font-sans)',
+                          lineHeight: 1.6,
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                        }}
+                      >
+                        {listing.description}
+                      </p>
+                    )}
+
+                    {/* Key facts: Revenue + Funding */}
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4 text-sm">
                       <div>
                         <dt
                           className="text-xs tracking-wide uppercase mb-1"
@@ -529,7 +537,7 @@ export default function Listings() {
                         >
                           Revenue
                         </dt>
-                        <dd style={{ color: 'var(--color-ink)' }}>
+                        <dd style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-sans)' }}>
                           {REVENUE_RANGE_LABELS[listing.revenueRange]}
                         </dd>
                       </div>
@@ -544,37 +552,31 @@ export default function Listings() {
                         >
                           Seeking
                         </dt>
-                        <dd style={{ color: 'var(--color-ink)' }}>{formatINR(listing.fundingGoal)}</dd>
+                        <dd style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-sans)' }}>
+                          {formatINR(listing.fundingGoal)}
+                        </dd>
                       </div>
                     </dl>
 
-                    {/* Divider */}
-                    <div className="my-4" style={{ borderTop: '1px solid var(--color-rule)' }} aria-hidden="true" />
-
-                    {/* Description */}
-                    {listing.description && (
-                      <p
-                        className="text-base mb-3"
-                        style={{
-                          color: 'var(--color-ink)',
-                          lineHeight: 1.6,
-                          overflow: 'hidden',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        {listing.description}
-                      </p>
-                    )}
-
-                    {/* Owner */}
-                    <p
-                      className="text-sm"
-                      style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
+                    {/* Footer: owner + view details */}
+                    <div
+                      className="mt-auto pt-3 flex items-center justify-between"
+                      style={{ borderTop: '1px solid var(--color-rule)' }}
                     >
-                      by {listing.owner.name}
-                    </p>
+                      <p
+                        className="text-xs"
+                        style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
+                      >
+                        by {listing.owner.name}
+                      </p>
+                      <span
+                        className="text-xs font-semibold"
+                        style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-sans)' }}
+                        aria-hidden="true"
+                      >
+                        View details →
+                      </span>
+                    </div>
                   </Link>
                 ))}
               </div>

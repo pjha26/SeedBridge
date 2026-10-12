@@ -7,6 +7,10 @@ import Listings from './pages/Listings';
 import ListingDetail from './pages/ListingDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 
+function DashboardPage() {
+  return <div style={{ padding: '4rem 2rem', fontFamily: 'var(--font-sans)' }}>Dashboard coming soon.</div>;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -27,6 +31,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ListingDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
             </ProtectedRoute>
           }
         />

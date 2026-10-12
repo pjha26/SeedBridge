@@ -56,6 +56,15 @@ export default function AppNav() {
                   </Link>
                 </li>
                 <li>
+                  <Link
+                    to="/dashboard"
+                    className="text-sm transition-opacity hover:opacity-70"
+                    style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
                   <span
                     className="text-sm"
                     style={{ color: 'var(--color-forest)', fontFamily: 'var(--font-sans)' }}
