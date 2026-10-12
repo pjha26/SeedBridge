@@ -86,7 +86,7 @@ export async function login(req, res, next) {
       // Single generic message regardless of which field was wrong.
       // This prevents email enumeration: an attacker can't tell whether
       // the email exists or the password was wrong.
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const token = signToken(user);

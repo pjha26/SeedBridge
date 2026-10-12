@@ -41,13 +41,16 @@ app.use(express.json());
 // ── Auth rate limiter ─────────────────────────────────────────────────────────
 // Applied only to /api/auth to keep login brute-force expensive.
 // Limits are configurable via env for easier tuning in staging.
-const authLimiter = rateLimit({
-  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 min
-  max:      Number(process.env.RATE_LIMIT_MAX)        || 10,             // 10 attempts
-  standardHeaders: true,   // send RateLimit-* headers so clients can back off
-  legacyHeaders:   false,
-  message: { error: 'Too many attempts. Please try again in 15 minutes.' },
-});
+// Disabled entirely in test environment so test suites are not throttled.
+const authLimiter = process.env.NODE_ENV === 'test'
+  ? (req, res, next) => next()
+  : rateLimit({
+      windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 min
+      max:      Number(process.env.RATE_LIMIT_MAX)        || 10,             // 10 attempts
+      standardHeaders: true,   // send RateLimit-* headers so clients can back off
+      legacyHeaders:   false,
+      message: { error: 'Too many attempts. Please try again in 15 minutes.' },
+    });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/health',   healthRouter);
