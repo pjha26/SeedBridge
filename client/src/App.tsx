@@ -3,16 +3,9 @@ import { AuthProvider } from './context/AuthContext';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import Listings from './pages/Listings';
+import ListingDetail from './pages/ListingDetail';
 import ProtectedRoute from './components/ProtectedRoute';
-
-// Placeholder for listings pages
-function ListingsPage() {
-  return <div>Listings page (coming in Step 3)</div>;
-}
-
-function ListingDetailPage() {
-  return <div>Listing detail page (coming in Step 3)</div>;
-}
 
 export default function App() {
   return (
@@ -25,7 +18,7 @@ export default function App() {
           path="/listings"
           element={
             <ProtectedRoute>
-              <ListingsPage />
+              <Listings />
             </ProtectedRoute>
           }
         />
@@ -33,7 +26,7 @@ export default function App() {
           path="/listings/:id"
           element={
             <ProtectedRoute>
-              <ListingDetailPage />
+              <ListingDetail />
             </ProtectedRoute>
           }
         />
