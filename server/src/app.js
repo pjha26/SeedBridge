@@ -7,6 +7,7 @@ import healthRouter    from './routes/health.js';
 import authRouter      from './routes/auth.js';
 import listingsRouter  from './routes/listings.js';
 import savedRouter     from './routes/saved.js';
+import interestRouter  from './routes/interest.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // ── Fail fast if JWT_SECRET is missing or too short ──────────────────────────
@@ -52,6 +53,7 @@ app.use('/api/health',   healthRouter);
 app.use('/api/auth',     authLimiter, authRouter);
 app.use('/api/listings', listingsRouter);
 app.use('/api/saved',    savedRouter);
+app.use('/api/interest', interestRouter);
 
 // ── Centralised error handler (must be last) ──────────────────────────────────
 app.use(errorHandler);

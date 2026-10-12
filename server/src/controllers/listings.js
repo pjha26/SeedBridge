@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Listing from '../models/Listing.js';
 import SavedListing from '../models/SavedListing.js';
+import InterestRequest from '../models/InterestRequest.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -248,6 +249,14 @@ export async function getListingById(req, res, next) {
         { investor: req.user.userId, listing: listing._id }
       ).lean();
       listing.savedByMe = !!saved;
+    }
+
+    // Inject myInterestStatus for investors
+    if (req.user?.role === 'investor') {
+      const interest = await InterestRequest.findOne(
+        { investor: req.user.userId, listing: listing._id }
+      ).lean();
+      listing.myInterestStatus = interest ? interest.status : 'none';
     }
 
     return res.json({ listing });

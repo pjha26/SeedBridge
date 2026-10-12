@@ -479,3 +479,98 @@ POST {{base}}/saved/{{listing_id}}
 ### Save with invalid ObjectId â†’ 404 (not 500)
 POST {{base}}/saved/not-an-objectid
 Authorization: Bearer {{token_investor}}
+
+
+###############################################################################
+# INTEREST REQUESTS
+###############################################################################
+
+@interest_id = PASTE_INTEREST_REQUEST_ID_HERE
+
+### POST /api/interest — investor expresses interest ? RUN MANUALLY — copy _id into @interest_id
+POST {{base}}/interest
+Authorization: Bearer {{token_investor}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listing_id}}",
+  "message": "I am interested in your business. Would love to connect."
+}
+
+###
+
+### POST /api/interest — duplicate ? 409
+POST {{base}}/interest
+Authorization: Bearer {{token_investor}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listing_id}}"
+}
+
+###
+
+### POST /api/interest — owner token ? 403
+POST {{base}}/interest
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "listingId": "{{listing_id}}"
+}
+
+###
+
+### GET /api/interest/sent — investor sees their requests (email absent until accepted)
+GET {{base}}/interest/sent
+Authorization: Bearer {{token_investor}}
+
+###
+
+### GET /api/interest/received — owner sees received requests
+GET {{base}}/interest/received
+Authorization: Bearer {{token_owner}}
+
+###
+
+### PATCH /api/interest/:id — accept ? RUN MANUALLY — email now visible in GET /sent
+PATCH {{base}}/interest/{{interest_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "status": "accepted"
+}
+
+###
+
+### PATCH /api/interest/:id — decline
+PATCH {{base}}/interest/{{interest_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "status": "declined"
+}
+
+###
+
+### PATCH /api/interest/:id — non-owner ? 403 ? RUN MANUALLY
+PATCH {{base}}/interest/{{interest_id}}
+Authorization: Bearer {{token_investor}}
+Content-Type: application/json
+
+{
+  "status": "accepted"
+}
+
+###
+
+### PATCH /api/interest/:id — already accepted ? 409
+PATCH {{base}}/interest/{{interest_id}}
+Authorization: Bearer {{token_owner}}
+Content-Type: application/json
+
+{
+  "status": "declined"
+}
