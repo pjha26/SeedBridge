@@ -572,7 +572,7 @@ function OwnerDashboard({
                       >
                         {displayActive ? 'Active' : 'Inactive'}
                       </button>
-                      {listing.isActive && (
+                      {displayActive && (
                         <Link
                           to={`/listings/${listing._id}`}
                           className="text-sm transition-opacity hover:opacity-75"
@@ -919,11 +919,12 @@ function InvestorDashboard({
   }, [fetchSaved, savedRetry]);
 
   async function handleUnsave(listingId: string) {
+    const removed = savedData.find((l) => l._id === listingId);
     setSavedData((prev) => prev.filter((l) => l._id !== listingId));
     try {
       await api.delete(`/api/saved/${listingId}`);
     } catch {
-      fetchSaved();
+      if (removed) setSavedData((prev) => [removed, ...prev]);
     }
   }
 
