@@ -100,7 +100,7 @@ Rate-limited to 10 requests per 15 minutes per IP (disabled in `NODE_ENV=test`).
 | `state` | string | — | Case-insensitive exact match |
 | `minFunding` | number | — | Rupees |
 | `maxFunding` | number | — | Rupees |
-| `sort` | string | `newest` | `newest`, `oldest`, `funding_asc`, `funding_desc` |
+| `sort` | string | `newest` | `newest`, `oldest`, `funding_asc`, `funding_desc`, `relevance` (requires `q`) |
 | `page` | integer | 1 | |
 | `limit` | integer | 12 | max 50 |
 
