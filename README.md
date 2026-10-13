@@ -1,10 +1,12 @@
 # SeedBridge
 
-A marketplace connecting small business owners with investors. Owners list their businesses; investors discover, save, and express interest in them. The platform handles discovery and connection only — no payments are processed.
+## 1. Project name and description
+
+**SeedBridge** is a marketplace connecting small business owners with investors. Owners list their businesses; investors discover, save, and express interest in them. The platform handles discovery and connection only — no payments are processed.
 
 ---
 
-## 1. Features
+## 2. Features
 
 ### Owner
 - Register with the Owner role and create one listing per account.
@@ -28,19 +30,19 @@ A marketplace connecting small business owners with investors. Owners list their
 
 ---
 
-## 2. Technologies used
+## 3. Technologies used
 
 | Layer | Libraries |
 |---|---|
 | Database | MongoDB, Mongoose 8 |
 | Server | Node.js, Express 4, Socket.io 4 |
 | Validation | Zod 3 |
-| Auth | jsonwebtoken, bcryptjs |
-| Security | helmet, express-rate-limit, cors |
+| Auth | jsonwebtoken 9, bcryptjs 2 |
+| Security | helmet 7, express-rate-limit 7, cors 2 |
 | Client | React 19, React Router 6, TypeScript 5, Vite 8 |
 | Styling | Tailwind CSS 3, PostCSS |
 | Fonts | Fraunces (variable), DM Sans (variable) via @fontsource-variable |
-| Testing | Vitest, Supertest, mongodb-memory-server |
+| Testing | Vitest 5, Supertest 7, mongodb-memory-server 10 |
 
 ### Architecture
 
@@ -51,10 +53,10 @@ Full diagrams are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ```mermaid
 flowchart TD
     subgraph Client["React Client (Vite · TypeScript · Tailwind)"]
-        AC["AuthContext\n(JWT in localStorage)"]
-        APC["API client\n(Bearer header)"]
-        SC["Socket.io client\n(auth.token)"]
-        UI["Pages & Components\n(Router, SocketContext)"]
+        AC["AuthContext<br/>(JWT in localStorage)"]
+        APC["API client<br/>(Bearer header)"]
+        SC["Socket.io client<br/>(auth.token)"]
+        UI["Pages & Components<br/>(Router, SocketContext)"]
     end
 
     subgraph Proxy["Vite dev proxy"]
@@ -63,10 +65,10 @@ flowchart TD
     end
 
     subgraph Server["Express Server (:5000)"]
-        MW["Middleware\n(helmet · cors · rate-limit · verifyToken · requireRole · zod)"]
-        RT["Routes\n(/auth · /listings · /saved · /interest · /notifications)"]
+        MW["Middleware<br/>(helmet · cors · rate-limit · verifyToken · requireRole · zod)"]
+        RT["Routes<br/>(/auth · /listings · /saved · /interest · /notifications)"]
         CT["Controllers"]
-        IO["Socket.io server\n(JWT auth · private rooms by userId)"]
+        IO["Socket.io server<br/>(JWT auth · private rooms by userId)"]
     end
 
     subgraph DB["MongoDB"]
@@ -86,10 +88,10 @@ flowchart TD
     MW --> RT
     RT --> CT
     CT --> C1 & C2 & C3 & C4 & C5
-    IO --> CT
+    CT --> IO
 ```
 
-The React client sends all HTTP traffic through the Vite dev proxy to Express; Socket.io uses a separate WebSocket proxy entry on the same target. The server enforces auth and role checks in middleware before requests reach controllers.
+The React client sends all HTTP traffic through the Vite dev proxy to Express; Socket.io uses a separate WebSocket proxy entry on the same target. The server enforces auth and role checks in middleware before requests reach controllers, which emit socket events directly when needed.
 
 #### Interest request flow
 
@@ -101,22 +103,22 @@ sequenceDiagram
     participant SIO as Socket.io
     actor Owner
 
-    Investor->>API: POST /api/interest {listingId, message}
-    API->>DB: Validate listing exists & isActive
-    API->>DB: Check for duplicate → 409 if exists
-    API->>DB: Create InterestRequest {status: pending}
+    Investor->>API: POST /api/interest
+    API->>DB: Validate listing exists and isActive
+    API->>DB: Check for duplicate, 409 if exists
+    API->>DB: Create InterestRequest status pending
     API->>DB: Create Notification for owner
-    API->>SIO: emitToUser(ownerId, "notification")
+    API->>SIO: emitToUser ownerId notification
     SIO-->>Owner: bell updates live
-    API-->>Investor: 201 {interestRequest}
+    API-->>Investor: 201 interestRequest
 
-    Owner->>API: PATCH /api/interest/:id {status: accepted}
-    API->>DB: Verify ownership → 403 if not owner
-    API->>DB: Verify status is pending → 409 if not
-    API->>DB: Update status; create Notification for investor
-    API->>SIO: emitToUser(investorId, "notification")
+    Owner->>API: PATCH /api/interest/:id status accepted
+    API->>DB: Verify ownership, 403 if not owner
+    API->>DB: Verify status is pending, 409 if not
+    API->>DB: Update status, create Notification for investor
+    API->>SIO: emitToUser investorId notification
     SIO-->>Investor: bell updates live
-    API-->>Owner: 200 {interestRequest}
+    API-->>Owner: 200 interestRequest
 
     Investor->>API: GET /api/interest/sent
     Note over API,DB: owner.email added only when status is accepted
@@ -185,7 +187,7 @@ erDiagram
 
 ---
 
-## 3. Setup and installation
+## 4. Setup and installation
 
 ### Prerequisites
 - Node.js v18 or later
@@ -209,20 +211,28 @@ npm install
 ### Environment variables
 
 **Server** — copy and fill in:
+
+macOS / Linux:
 ```bash
 cd server
 cp .env.example .env
 ```
 
+Windows PowerShell:
+```powershell
+cd server
+Copy-Item .env.example .env
+```
+
 Open `server/.env` and set at minimum:
 - `MONGO_URI` — your MongoDB connection string (e.g. `mongodb://localhost:27017/seedbridge`)
-- `JWT_SECRET` — any random string of at least 32 characters
+- `JWT_SECRET` — any random string of **at least 32 characters**
 
 **Client** — the client uses Vite's proxy for all API calls and does not require a `.env` file in development. The `client/.env.example` file is provided for reference only.
 
 ---
 
-## 4. How to run
+## 5. How to run
 
 Open two terminals.
 
@@ -251,6 +261,7 @@ npm run seed
 cd server
 npm test
 ```
+> Note: the first run downloads a MongoDB binary (~70 MB) used by mongodb-memory-server. Subsequent runs use the cached binary and start in a few seconds.
 
 ### Demo accounts
 
@@ -273,19 +284,19 @@ Password for all accounts: `SeedBridge2024!`
 
 ---
 
-## 5. AI tool used
+## 6. AI tool used
 
 The only AI tool used in this project was **Kiro**.
 
 ---
 
-## 6. AI development experience
+## 7. AI development experience
 
 I used Kiro throughout the project as a coding assistant working from a spec. Before writing any code, I created requirements and design documents in `.kiro/specs/` and a set of project rules in `.kiro/steering/project-rules.md` that covered server layering, enum placement, validation rules, and commit conventions. From there I worked in small steps — one feature area at a time (models, auth, listings, saved, interest, notifications, dashboard, tests) — delegating implementation to Kiro and reviewing each output before moving on. I tested manually in the browser and against the API using `server/requests.http`, compared actual JSON responses to what the code claimed to return, and reported any discrepancies back to Kiro to fix. Each feature area was committed separately so the history is readable and individual changes are easy to revert.
 
 ---
 
-## 7. Specific AI-assisted tasks
+## 8. Specific AI-assisted tasks
 
 **1. Enum design — revenue range key renamed from `"0"` to `"none"`**
 

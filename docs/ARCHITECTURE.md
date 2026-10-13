@@ -5,10 +5,10 @@
 ```mermaid
 flowchart TD
     subgraph Client["React Client (Vite · TypeScript · Tailwind)"]
-        AC["AuthContext\n(JWT in localStorage)"]
-        APC["API client\n(Bearer header)"]
-        SC["Socket.io client\n(auth.token)"]
-        UI["Pages & Components\n(Router, SocketContext)"]
+        AC["AuthContext<br/>(JWT in localStorage)"]
+        APC["API client<br/>(Bearer header)"]
+        SC["Socket.io client<br/>(auth.token)"]
+        UI["Pages & Components<br/>(Router, SocketContext)"]
     end
 
     subgraph Proxy["Vite dev proxy"]
@@ -17,10 +17,10 @@ flowchart TD
     end
 
     subgraph Server["Express Server (:5000)"]
-        MW["Middleware\n(helmet · cors · rate-limit · verifyToken · requireRole · zod)"]
-        RT["Routes\n(/auth · /listings · /saved · /interest · /notifications)"]
+        MW["Middleware<br/>(helmet · cors · rate-limit · verifyToken · requireRole · zod)"]
+        RT["Routes<br/>(/auth · /listings · /saved · /interest · /notifications)"]
         CT["Controllers"]
-        IO["Socket.io server\n(JWT auth · private rooms by userId)"]
+        IO["Socket.io server<br/>(JWT auth · private rooms by userId)"]
     end
 
     subgraph DB["MongoDB"]
@@ -40,7 +40,7 @@ flowchart TD
     MW --> RT
     RT --> CT
     CT --> C1 & C2 & C3 & C4 & C5
-    IO --> CT
+    CT --> IO
 ```
 
 The React client sends all HTTP traffic through the Vite dev proxy to Express; Socket.io uses a separate WebSocket proxy entry on the same target. The server enforces auth and role checks in middleware before requests reach controllers, which are the only layer that touches MongoDB.
