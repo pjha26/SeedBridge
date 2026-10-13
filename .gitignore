@@ -16,8 +16,12 @@ npm-debug.log*
 
 # Editor / OS
 .DS_Store
-.vscode/settings.json
+.vscode/
 Thumbs.db
+*.local
+
+# Test coverage
+coverage/
 
 # Workflow agent artifacts (plans, reviews, verdict files)
 .agents/
