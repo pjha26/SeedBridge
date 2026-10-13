@@ -286,7 +286,7 @@ Password for all accounts: `SeedBridge2024!`
 
 ## 6. AI tool used
 
-The only AI tool used in this project was **Kiro**.
+Kiro. I built the project in the Kiro IDE (specs, steering rules and code generation). I also used a general-purpose AI assistant (Claude) for planning, drafting prompts for Kiro, and reviewing results.
 
 ---
 
