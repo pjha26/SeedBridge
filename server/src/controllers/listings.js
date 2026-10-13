@@ -36,6 +36,7 @@ const BROWSE_PROJECTION = {
   revenueRange:   1,
   fundingGoal:    1,
   fundingPurpose: 1,
+  description:    1,
   isActive:       1,
   createdAt:      1,
   // owner populated separately — only name field
