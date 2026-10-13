@@ -105,7 +105,7 @@ sequenceDiagram
     API->>DB: Validate listing exists & isActive
     API->>DB: Check for duplicate → 409 if exists
     API->>DB: Create InterestRequest {status: pending}
-    API->>DB: Create Notification {user: owner}
+    API->>DB: Create Notification for owner
     API->>SIO: emitToUser(ownerId, "notification")
     SIO-->>Owner: bell updates live
     API-->>Investor: 201 {interestRequest}
@@ -113,13 +113,13 @@ sequenceDiagram
     Owner->>API: PATCH /api/interest/:id {status: accepted}
     API->>DB: Verify ownership → 403 if not owner
     API->>DB: Verify status is pending → 409 if not
-    API->>DB: Update status; create Notification {user: investor}
+    API->>DB: Update status; create Notification for investor
     API->>SIO: emitToUser(investorId, "notification")
     SIO-->>Investor: bell updates live
     API-->>Owner: 200 {interestRequest}
 
     Investor->>API: GET /api/interest/sent
-    Note over API,DB: owner.email included only when status is accepted
+    Note over API,DB: owner.email added only when status is accepted
     API-->>Investor: 200 list with ownerEmail if accepted
 ```
 
